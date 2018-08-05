@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/07/30 19:45:00 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/02 00:13:09 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/05 19:50:26 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,28 @@
 # define MAX_SOCKETS 4
 # define MAX_CLIENTS 3
 # define BUFF_SIZE 4096
-# define PORT 3001
+# define AUTHOR_BUFF_SIZE 50
 
+# define DEFAULT 0
+# define INIT_USERNAME 1
+# define FROM_SERVER 2
 
-void	ft_process_client(void);
-void	ft_process_server(void);
+typedef struct		s_client_socket
+{
+	UDPsocket		socket;
+	char			author[AUTHOR_BUFF_SIZE];
+	int				isfree;
+}					t_client_socket;
+
+typedef struct		s_message
+{
+	char			author[AUTHOR_BUFF_SIZE];
+	char			content[BUFF_SIZE];
+	char			from_server;
+	char			flags;
+}					t_message;
+
+void	ft_process_client(char *serverName, char *local, char *remote,  char *name);
+void	ft_process_server(char *port);
 void	ft_error(char *str);
 #endif

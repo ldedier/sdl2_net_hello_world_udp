@@ -6,7 +6,7 @@
 /*   By: ldedier <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/01/07 01:13:42 by ldedier           #+#    #+#             */
-/*   Updated: 2018/06/12 10:49:02 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/04 12:45:39 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,14 @@
 # define GREEN 		"\x1B[32m"
 # define YELLOW		"\x1B[33m"
 # define PINK		"\x1B[35m"
-# define CYAN		"\x1B[34m"
-# define EOC		"\033[0m"
+# define BLUE		"\x1B[34m"
+# define CYAN		"\x1B[36m"
+# define WHITE		"\x1B[37m"
+
+# define UNDERLINE	"\033[4m"
+# define EUNDERLINE	"\033[24m"
+# define RESET		"\033[0m"
+
 
 typedef union		u_var
 {

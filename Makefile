@@ -6,14 +6,13 @@
 #    By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/26 20:58:27 by ldedier           #+#    #+#              #
-#    Updated: 2018/08/03 23:38:36 by ldedier          ###   ########.fr        #
+#    Updated: 2018/08/05 19:35:43 by ldedier          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME	= udp
 
-CC		= gcc -g
-
+CC		= gcc -g 
 PWD = \"$(shell pwd)\"
 
 OK_COLOR = \x1b[32;01m
@@ -46,7 +45,7 @@ LIBSDL2TTF_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_ttf/2.0.14/include/SDL2/
 LIBSDL2NET_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_net/2.0.1/include/SDL2/
 LIBSDL2MIXER_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_mixer/2.0.2_3/include/SDL2/
 
-SRCS_NO_PREFIX = main.c client.c server.c
+SRCS_NO_PREFIX = main.c client.c
 
 INCLUDES_NO_PREFIX = net.h
 
@@ -78,7 +77,8 @@ else
 	CFLAGS += -Ofast
 endif
 
-LFLAGS = -L $(LIBFTDIR) -lft -L $(LIBMATDIR) -lmat
+LFLAGS = -L $(LIBFTDIR) -lft -L $(LIBMATDIR) -lmat -fsanitize=address
+
 
 ifeq ($(MACBOOK), 1)
 	LFLAGS += -L $(LIBSDL2DIR_MB) -lsdl2 -lsdl2_ttf -lsdl2_net -lsdl2_mixer
