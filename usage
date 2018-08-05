@@ -1,0 +1,6 @@
+./udp client [USELESS??] [USELESS] [MY_PORT] receiver [SOMETHING]
+./udp client 127.0.0.1 "la dqdqdbite" 3002 receiver RIEN
+./udp client RIEN "la dqdqdbite" 3002 receiver RIEN
+
+./udp client [IPADRESS] [TO_PORT] [USELESS] sender [MESSAGE]
+./udp client 127.0.0.1 3002 fesfefse sender olala

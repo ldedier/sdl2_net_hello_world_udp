@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/07/30 19:45:00 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/05 19:50:26 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/06 00:32:59 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ typedef struct		s_message
 	char			flags;
 }					t_message;
 
-void	ft_process_client(char *serverName, char *local, char *remote,  char *name);
+void	ft_process_client(char *serverName, char *local, char *remote,  char *name, char *message);
 void	ft_process_server(char *port);
 void	ft_error(char *str);
 #endif

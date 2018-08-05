@@ -6,202 +6,11 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/05 22:48:29 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/06 01:13:50 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "net.h"
-
-struct termios orig_termios;
-
-void reset_terminal_mode()
-{
-	tcsetattr(0, TCSANOW, &orig_termios);
-}
-
-void set_conio_terminal_mode()
-{
-	struct termios new_termios;
-
-	tcgetattr(0, &orig_termios);
-	memcpy(&new_termios, &orig_termios, sizeof(new_termios));
-
-	atexit(reset_terminal_mode);
-	cfmakeraw(&new_termios);
-	tcsetattr(0, TCSANOW, &new_termios);
-}
-
-int kbHit()
-{
-	long waitSeconds      = 1L;
-	long waitMicroSeconds = 0L;
-	struct timeval tv = { waitSeconds, waitMicroSeconds };
-
-	fd_set fds;
-	FD_SET(0, &fds);
-	return select(1, &fds, NULL, NULL, &tv);
-}
-
-char	*ft_strjoin_char(char *str, char c)
-{
-	char *new;
-	int length;
-
-	length = strlen(str);
-	new = ft_strnew(length + 1);
-	strcpy(new, str);
-	new[length] = c;
-	free(str);
-	return (new);
-}
-
-char	*ft_strdel_char(char *str)
-{
-	if (strlen(str) == 0)
-		return (str);
-	else
-	{
-		str[strlen(str) - 1] = 0;
-		return (str);
-	}
-}
-
-int getch()
-{
-	int r;
-	unsigned char c;
-	if ((r = read(0, &c, sizeof(c))) < 0)
-		return r;
-	else
-		return c;
-}
-
-void	ft_print_message(t_message *message)
-{
-	if(message->flags == FROM_SERVER)
-	{
-		ft_printf(UNDERLINE YELLOW"%s:"RESET, message->author);
-		ft_printf(CYAN" %s\n"RESET, message->content);
-	}
-	else
-	{
-		ft_printf(UNDERLINE GREEN"%s:"RESET, message->author);
-		ft_printf(CYAN" %s\n"RESET, message->content);
-	}
-}
-
-UDPpacket *packet;
-IPaddress serverIP;
-UDPsocket ourSocket;
-
-int InitSDL_Net()
-{
-	if (SDLNet_Init() == -1)
-		return 0; 
-	return 1;
-}
-
-int CreatePacket( size_t packetSize )
-{
-	//	Allocate memory for the packet
-	packet = SDLNet_AllocPacket( packetSize );
-	if (packet == NULL)
-		return 0; 
-	// Set the destination host and port
-	// We got these from calling SetIPAndPort()
-	packet->address.host = serverIP.host; 
-	packet->address.port = serverIP.port;
-	return 1;
-}
-
-int OpenPort( int localport )
-{
-	//Sets our socket with our local port
-
-	ourSocket = SDLNet_UDP_Open( localport );
-	if (ourSocket == NULL )
-	{
-		printf("coudln't open socket at port %d\n", localport);
-		return 0; 
-	}
-	return 1;
-}
-
-int SetIPAndPort( char *ip, int port )
-{
-	//Set IP and port number with correct endianess
-	if (SDLNet_ResolveHost( &serverIP, ip, port )  == -1 )
-		return 0; 
-	return 1; 
-}
-
-int Init( char *ip, int remotePort, int localPort, size_t packet_size)
-{
-	if (!InitSDL_Net())
-		return 0;
-	if ( !OpenPort(localPort))
-		return 0;
-	if ( !SetIPAndPort(ip, remotePort))
-		return 0;
-	if (!CreatePacket(packet_size))
-		return 0;
-	return 1;
-}
-
-//Send data. 
-int Send(char *str)
-{
-	//Set the data
-	//UDPPacket::data is an Uint8, which is similar to char*
-	//This means we can't set it directly.
-
-	//std::stringstreams let us add any data to it using << ( like std::cout ) 
-	//We can extract any data from a std::stringstream using >> ( like std::cin )
-	
-	memcpy(packet->data, str, ft_strlen(str));
-	packet->len = ft_strlen(str);
-
-	//	SDLNet_UDP_Send returns number of packets sent. 0 means error
-	
-	if (SDLNet_UDP_Send(ourSocket, -1, packet) == 0)
-	{
-		printf("fail de send\n");
-		return 0; 
-	}
-	return 1;
-}
-
-void CheckForData()
-{
-	char *str;
-
-	static int i = 0;
-	//	Check if there is a packet waiting for us...
-	if (SDLNet_UDP_Recv(ourSocket, packet))
-	{
-		str = ft_strndup((char *)packet->data, packet->status);
-		printf("on recoit :%s", str);
-		//printf("on a recu %s\n", packet->data);
-	}
-	else 
-		printf(RED"on a recu R\n"RESET);
-}
-
-void	ft_process_client(char *serverName, char *local, char *remote, char *name)
-{
-	if (!Init(serverName, atoi(local), atoi(remote), 1000))
-		exit(1);
-	while (1)
-	{
-		if (!strcmp(name,"sender"))
-			Send("des barres\n");
-		else if (!strcmp(name, "receiver"))
-			CheckForData();
-		else
-			ft_error("role undefined");
-		usleep(10);
-	}
-}
 
 /*
    void	ft_process_client(char *serverName, char *port, char *name)
@@ -341,3 +150,199 @@ SDLNet_Quit();
 reset_terminal_mode();
 }
 */
+struct termios orig_termios;
+
+void reset_terminal_mode()
+{
+	tcsetattr(0, TCSANOW, &orig_termios);
+}
+
+void set_conio_terminal_mode()
+{
+	struct termios new_termios;
+
+	tcgetattr(0, &orig_termios);
+	memcpy(&new_termios, &orig_termios, sizeof(new_termios));
+
+	atexit(reset_terminal_mode);
+	cfmakeraw(&new_termios);
+	tcsetattr(0, TCSANOW, &new_termios);
+}
+
+int kbHit()
+{
+	long waitSeconds      = 1L;
+	long waitMicroSeconds = 0L;
+	struct timeval tv = { waitSeconds, waitMicroSeconds };
+
+	fd_set fds;
+	FD_SET(0, &fds);
+	return select(1, &fds, NULL, NULL, &tv);
+}
+
+char	*ft_strjoin_char(char *str, char c)
+{
+	char *new;
+	int length;
+
+	length = strlen(str);
+	new = ft_strnew(length + 1);
+	strcpy(new, str);
+	new[length] = c;
+	free(str);
+	return (new);
+}
+
+char	*ft_strdel_char(char *str)
+{
+	if (strlen(str) == 0)
+		return (str);
+	else
+	{
+		str[strlen(str) - 1] = 0;
+		return (str);
+	}
+}
+
+int getch()
+{
+	int r;
+	unsigned char c;
+	if ((r = read(0, &c, sizeof(c))) < 0)
+		return r;
+	else
+		return c;
+}
+
+void	ft_print_message(t_message *message)
+{
+	if(message->flags == FROM_SERVER)
+	{
+		ft_printf(UNDERLINE YELLOW"%s:"RESET, message->author);
+		ft_printf(CYAN" %s\n"RESET, message->content);
+	}
+	else
+	{
+		ft_printf(UNDERLINE GREEN"%s:"RESET, message->author);
+		ft_printf(CYAN" %s\n"RESET, message->content);
+	}
+}
+
+UDPpacket *packet;
+IPaddress serverIP;
+UDPsocket ourSocket;
+
+int InitSDL_Net()
+{
+	if (SDLNet_Init() == -1)
+		return 0; 
+	return 1;
+}
+
+int CreatePacket( size_t packetSize )
+{
+	//	Allocate memory for the packet
+	packet = SDLNet_AllocPacket( packetSize );
+	if (packet == NULL)
+		return 0; 
+	// Set the destination host and port
+	// We got these from calling SetIPAndPort()
+	packet->address.host = serverIP.host; 
+	packet->address.port = serverIP.port;
+	return 1;
+}
+
+int OpenPort( int localport )
+{
+	//Sets our socket with our local port
+
+	ourSocket = SDLNet_UDP_Open( localport );
+	if (ourSocket == NULL )
+	{
+		printf("coudln't open socket at port %d\n", localport);
+		return 0; 
+	}
+	return 1;
+}
+
+int SetIPAndPort( char *ip, int port, char *role)
+{
+	if (!ft_strcmp("receiver", role))
+	{
+		if (SDLNet_ResolveHost( &serverIP, NULL, port )  == -1 )
+			return 0; 
+	}
+	else
+	{
+	//Set IP and port number with correct endianess
+	if (SDLNet_ResolveHost( &serverIP, ip, port )  == -1 )
+		return 0; 
+	}
+	return 1; 
+}
+
+int Init( char *ip, int remotePort, int localPort, char *name, size_t packet_size)
+{
+	if (!InitSDL_Net())
+		return 0;
+	if ( !OpenPort(localPort))
+		return 0;
+	if ( !SetIPAndPort(ip, remotePort, name))
+		return 0;
+	if (!CreatePacket(packet_size))
+		return 0;
+	return 1;
+}
+
+//Send data. 
+int Send(char *str)
+{
+	//Set the data
+	//UDPPacket::data is an Uint8, which is similar to char*
+	//This means we can't set it directly.
+
+	//std::stringstreams let us add any data to it using << ( like std::cout ) 
+	//We can extract any data from a std::stringstream using >> ( like std::cin )
+	
+	memcpy(packet->data, str, ft_strlen(str));
+	packet->len = ft_strlen(str);
+
+	//	SDLNet_UDP_Send returns number of packets sent. 0 means error
+	if (SDLNet_UDP_Send(ourSocket, -1, packet) == 0)
+	{
+		printf("fail de send\n");
+		return 0; 
+	}
+	return 1;
+}
+
+void CheckForData()
+{
+	char *str;
+
+	static int i = 0;
+	//	Check if there is a packet waiting for us...
+	if (SDLNet_UDP_Recv(ourSocket, packet))
+	{
+		str = ft_strndup((char *)packet->data, packet->status);
+		printf("on recoit :%s\n", str);
+		//printf("on a recu %s\n", packet->data);
+	}
+	else 
+		printf(RED"on a recu R\n"RESET);
+}
+
+void	ft_process_client(char *serverName, char *local, char *remote, char *name, char *message)
+{
+	if (!Init(serverName, atoi(local), atoi(remote), name, 1000))
+		exit(1);
+	while (1)
+	{
+		if (!strcmp(name,"sender"))
+			Send(message);
+		else if (!strcmp(name, "receiver"))
+			CheckForData();
+		else
+			ft_error("role undefined");
+	}
+}

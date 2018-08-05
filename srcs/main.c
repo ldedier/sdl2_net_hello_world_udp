@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/07/26 21:09:19 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/05 19:50:00 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/06 00:33:18 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 	if (argc == 1)
 		ft_error("invalid mode");
 	if (!ft_strcmp(argv[1], "client"))
-		ft_process_client(argv[2], argv[3], argv[4], argv[5]);
+		ft_process_client(argv[2], argv[3], argv[4], argv[5], argv[6]);
 	else
 		ft_error("invalid mode");
 	return (0);
