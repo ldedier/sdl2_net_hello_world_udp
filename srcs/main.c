@@ -25,7 +25,9 @@ int main(int argc, char **argv)
 	if (argc == 1)
 		ft_error("invalid mode");
 	if (!ft_strcmp(argv[1], "client"))
-		ft_process_client(argv[2], argv[3], argv[4], argv[5], argv[6]);
+		ft_process_client(argv[2], argv[3], argv[4]); //ip, port, message
+	else if (!ft_strcmp(argv[1], "server"))
+		ft_process_server(argv[2]); //port
 	else
 		ft_error("invalid mode");
 	return (0);

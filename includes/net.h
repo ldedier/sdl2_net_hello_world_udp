@@ -46,7 +46,8 @@ typedef struct		s_message
 	char			flags;
 }					t_message;
 
-void	ft_process_client(char *serverName, char *local, char *remote,  char *name, char *message);
+void	ft_process_client(char *serverName, char *port, char *message);
 void	ft_process_server(char *port);
 void	ft_error(char *str);
+
 #endif
