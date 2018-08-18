@@ -6,13 +6,15 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/06 01:13:50 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/18 20:55:25 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "net.h"
 
 UDPpacket *packet;
+UDPpacket *received_packet;
+
 IPaddress serverIP;
 UDPsocket ourSocket;
 
@@ -23,7 +25,7 @@ int InitSDL_NetClient()
 	return 1;
 }
 
-int CreatePacketClient( size_t packetSize )
+int CreatePacketClient( size_t packetSize ) //Packets clients vers serveur
 {
 	//	Allocate memory for the packet
 	packet = SDLNet_AllocPacket( packetSize );
@@ -35,6 +37,18 @@ int CreatePacketClient( size_t packetSize )
 	packet->address.port = serverIP.port;
 	return 1;
 }
+
+int CreatePacketReceivedClient( size_t packetSize ) // Packets serveurs vers clients
+{
+	//	Allocate memory for the packet
+	received_packet = SDLNet_AllocPacket(packetSize);
+	if (received_packet == NULL)
+		return 0; 
+	// Set the destination host and port
+	// We got these from calling SetIPAndPort()
+	return 1;
+}
+
 
 int OpenPortClient(void)
 {
@@ -70,7 +84,7 @@ int InitClient( char *ip, int remotePort, size_t packet_size)
 }
 
 //Send data. 
-int Send(char *str)
+int Send(char *str) //send from client to server
 {
 	int length;
 	int nb_packets;
@@ -84,13 +98,28 @@ int Send(char *str)
 	if ((nb_packets = SDLNet_UDP_Send(ourSocket, -1, packet)) == 0)
 	{
 		printf("fail de send\n");
-		return 0; 
+		return 0;
 	}
 	else
 	{
-		printf("successfully sent %d\n", nb_packets);
+		printf("on a envoye\nport: %u\nadress:%u\n", packet->address.port, packet->address.host);
+//		printf("successfully sent %d\n", nb_packets);
 	}
 	return 1;
+}
+
+void CheckForDataBack()
+{
+	char *str;
+	static int i = 0;
+	//  Check if there is a packet waiting for us...
+	if (SDLNet_UDP_Recv(ourSocket, received_packet))
+	{
+		str = ft_strndup((char *)received_packet->data, received_packet->status);
+		printf("on recoit du serveur: %s\n", str);
+	}
+//	else
+//		printf(RED"on a recu R\n"RESET);
 }
 
 void	ft_process_client(char *serverName, char *port, char *message)
@@ -100,5 +129,6 @@ void	ft_process_client(char *serverName, char *port, char *message)
 	while (1)
 	{
 		Send(message);
+		CheckForDataBack();
 	}
 }
