@@ -40,10 +40,8 @@ typedef struct		s_client_socket
 
 typedef struct		s_message
 {
-	char			author[AUTHOR_BUFF_SIZE];
-	char			content[BUFF_SIZE];
-	char			from_server;
-	char			flags;
+	char			data[BUFF_SIZE];
+	IPaddress		from;
 }					t_message;
 
 void	ft_process_client(char *serverName, char *port, char *message);

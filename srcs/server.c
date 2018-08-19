@@ -15,6 +15,9 @@
 UDPpacket *received_packet;
 UDPpacket *packet;
 
+t_message *received_message;
+t_message *message;
+
 UDPsocket ourSocket;
 UDPsocket clientSocket;
 
@@ -78,6 +81,9 @@ int InitServer(int port, size_t packet_size)
 		return 0;
 	if (!CreatePacket(packet_size))
 		return 0;
+	message = malloc(sizeof(t_message));
+	received_message = malloc(sizeof(t_message));
+	
 	return 1;
 }
 
@@ -86,6 +92,12 @@ int SendFromServer(char *str)
 	int length;
 	int nb_packets;
 
+
+	memset(message->data, '\0', BUFF_SIZE);
+	memcpy(message->data, str, ft_strlen(str));
+	memcpy(packet->data, message, sizeof(t_message));
+	packet->len = sizeof(message);
+	
 	length = ft_strlen(str);
 	memcpy(packet->data, str, length);
 	packet->len = length;
@@ -109,18 +121,22 @@ void CheckForData()
 	//	Check if there is a packet waiting for us...
 	if (SDLNet_UDP_Recv(ourSocket, received_packet))
 	{
-		str = ft_strndup((char *)received_packet->data, received_packet->status);
+		received_message = (t_message *)(received_packet->data);
+		str = ft_strndup(received_message->data, ft_strlen(received_message->data));
 
 		printf("on recoit :%s\n", str);
 		printf("port: %u\n", received_packet->address.port);
 		printf("host: %u\n", received_packet->address.host);
-		printf("i: %d\n", i);
-		packet->address.host = received_packet->address.host;
-		packet->address.port = received_packet->address.port;
+		
+		printf("portV2: %u\n", received_message->from.port);
+		printf("hostV2: %u\n", received_message->from.host);
+		
+		packet->address = received_message->from;
+		
 		if (!i)
 		{
 			i = 1;
-			clientSocket = SDLNet_UDP_Open(received_packet->address.port);
+			clientSocket = SDLNet_UDP_Open(received_message->from.port);
 			if (clientSocket == NULL)
 			{
 				printf("boloss\n");
@@ -135,7 +151,7 @@ void CheckForData()
 
 void	ft_process_server(char *port)
 {
-	if (!InitServer(atoi(port), 1000))
+	if (!InitServer(atoi(port), sizeof(t_message)))
 		exit(1);
 	while (1)
 	{
