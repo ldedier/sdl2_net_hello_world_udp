@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/18 20:55:25 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/20 00:03:30 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@ UDPpacket *packet;
 UDPpacket *received_packet;
 
 IPaddress serverIP;
+IPaddress ourIP;
 UDPsocket ourSocket;
 
 t_message *received_message;
@@ -42,7 +43,7 @@ int CreatePacketClient( size_t packetSize ) //Packets clients vers serveur
 
 	//printf("host of serverIP %u\n", serverIP.host);
 	//printf("port of serverIP %u\n", serverIP.port);
-	return 1;
+	return (1);
 }
 
 int CreatePacketReceivedClient( size_t packetSize ) // Packets serveurs vers clients
@@ -87,10 +88,11 @@ int InitClient(char *ip, int remotePort, size_t packet_size)
 		return 0;
 	message = malloc(sizeof(t_message));
 	received_message = malloc(sizeof(t_message));
-	return 1;
+	return (1);
 }
 
 //Send data. 
+
 int Send(char *str) //send from client to server
 {
 	int length;
@@ -99,9 +101,10 @@ int Send(char *str) //send from client to server
 
 	memset(message->data, '\0', BUFF_SIZE);
 	memcpy(message->data, str, ft_strlen(str));
-	memcpy(packet->data, message, sizeof(t_message));
 	packet->len = sizeof(t_message);
-//	SDLNet_ResolveHost( &serverIP, ip, port )
+	message->from = ourIP;
+	memcpy(packet->data, message, sizeof(t_message));
+
 	//	SDLNet_UDP_Send returns number of packets sent. 0 means error
 	if ((nb_packets = SDLNet_UDP_Send(ourSocket, -1, packet)) == 0)
 	{
@@ -113,7 +116,7 @@ int Send(char *str) //send from client to server
 		printf("on a envoye\n\tport: %u\n\tadress:%u\n", packet->address.port, packet->address.host);
 //		printf("successfully sent %d\n", nb_packets);
 	}
-	return 1;
+	return (1);
 }
 
 void CheckForDataBack()
@@ -124,7 +127,7 @@ void CheckForDataBack()
 	if (SDLNet_UDP_Recv(ourSocket, received_packet))
 	{
 		received_message = (t_message *)(received_packet->data);
-		str = ft_strndup(message->data, ft_strlen(message->data));
+		str = ft_strndup(received_message->data, ft_strlen(received_message->data));
 		printf("on recoit du serveur: %s\n", str);
 	}
 //	else

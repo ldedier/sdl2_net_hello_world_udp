@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/18 21:25:57 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/20 00:03:31 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,6 @@ void CheckForData()
 		
 		printf("portV2: %u\n", received_message->from.port);
 		printf("hostV2: %u\n", received_message->from.host);
-		
 		packet->address = received_message->from;
 		
 		if (!i)
