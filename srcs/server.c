@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/20 00:03:31 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/20 22:33:56 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,15 +92,11 @@ int SendFromServer(char *str)
 	int length;
 	int nb_packets;
 
-
 	memset(message->data, '\0', BUFF_SIZE);
 	memcpy(message->data, str, ft_strlen(str));
 	memcpy(packet->data, message, sizeof(t_message));
-	packet->len = sizeof(message);
 	
-	length = ft_strlen(str);
-	memcpy(packet->data, str, length);
-	packet->len = length;
+	packet->len = sizeof(t_message);
 	if ((nb_packets = SDLNet_UDP_Send(clientSocket, -1, packet)) == 0)
 	{
 		printf("fail de send\n");
@@ -128,21 +124,19 @@ void CheckForData()
 		printf("port: %u\n", received_packet->address.port);
 		printf("host: %u\n", received_packet->address.host);
 		
-		printf("portV2: %u\n", received_message->from.port);
-		printf("hostV2: %u\n", received_message->from.host);
-		packet->address = received_message->from;
-		
+		packet->address.port = received_packet->address.port;
+		packet->address.host = received_packet->address.host;
 		if (!i)
 		{
 			i = 1;
-			clientSocket = SDLNet_UDP_Open(received_message->from.port);
+			clientSocket = SDLNet_UDP_Open(0);
 			if (clientSocket == NULL)
 			{
 				printf("boloss\n");
 				exit(1);
 			}
 		}
-		SendFromServer("d barres");
+		SendFromServer("OLALALALALALALALALA C BONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\n");
 	}
 	else 
 		printf(RED"on a recu R\n"RESET);
