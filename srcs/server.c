@@ -6,87 +6,13 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/20 22:33:56 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/22 01:43:50 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "net.h"
 
-UDPpacket *received_packet;
-UDPpacket *packet;
-
-t_message *received_message;
-t_message *message;
-
-UDPsocket ourSocket;
-UDPsocket clientSocket;
-
-int InitSDL_Net()
-{
-	if (SDLNet_Init() == -1)
-		return 0; 
-	return 1;
-}
-
 /*
-int SetIPAndPortServer( char *ip, int port)
-{
-	if (SDLNet_ResolveHost( &serverIP, ip, port )  == -1 )
-		return 0;
-	return 1;
-}
-*/
-
-int CreatePacketReceived( size_t packetSize )
-{
-	//	Allocate memory for the packet
-	received_packet = SDLNet_AllocPacket( packetSize );
-	if (received_packet == NULL)
-		return 0; 
-	// Set the destination host and port
-	// We got these from calling SetIPAndPort()
-	return 1;
-}
-
-int CreatePacket( size_t packetSize )
-{
-	//	Allocate memory for the packet
-	packet = SDLNet_AllocPacket( packetSize );
-	if (packet == NULL)
-		return 0; 
-	// Set the destination host and port
-	// We got these from calling SetIPAndPort()
-	return 1;
-}
-
-int OpenPort( int localport )
-{
-	//Sets our socket with our local port
-	ourSocket = SDLNet_UDP_Open(localport);
-	if (ourSocket == NULL )
-	{
-		printf("coudln't open socket at port %d\n", localport);
-		return 0; 
-	}
-	return 1;
-}
-
-int InitServer(int port, size_t packet_size)
-{
-	if (!InitSDL_Net())
-		return 0;
-	if ( !OpenPort(port))
-		return 0;
-	if (!CreatePacketReceived(packet_size))
-		return 0;
-	if (!CreatePacket(packet_size))
-		return 0;
-	message = malloc(sizeof(t_message));
-	received_message = malloc(sizeof(t_message));
-	
-	return 1;
-}
-
 int SendFromServer(char *str)
 {
 	int length;
@@ -108,46 +34,82 @@ int SendFromServer(char *str)
 	}
 	return 1;
 }
+*/
 
-void CheckForData()
+void	ft_init_sockets(t_client_socket clientSockets[MAX_CLIENTS])
 {
-	char *str;
-	static int i = 0;
-	
-	//	Check if there is a packet waiting for us...
-	if (SDLNet_UDP_Recv(ourSocket, received_packet))
+	int i;
+
+	i = 0;
+	while (i < MAX_CLIENTS)
+	{
+		clientSockets[i].socket = NULL;
+		clientSockets[i].isfree = 1;
+		i++;
+	}
+}
+
+int	ft_init_bundle(t_bundle *bundle, size_t size)
+{
+	if (!(bundle->packet = ft_create_packet(size)))
+		return (0);
+	if (!(bundle->message = malloc(size)))
+		return(0);
+	return (1);
+}
+
+int ft_init_server(t_server *server, int port)
+{
+	if (!ft_open_port(&(server->socket), port))
+		return (0);
+	if (!ft_init_bundle(&(server->received),sizeof(t_message)))
+		return (0);
+	if (!ft_init_bundle(&(server->to_send),sizeof(t_message)))
+		return (0);
+	ft_init_sockets(server->client_sockets);
+	server->on = 1;
+	return (1);
+}
+
+void ft_check_for_data(t_server *server)
+{
+	char		*str;
+	UDPpacket	*received_packet;
+	t_message	*received_message;
+	int			nb_packets;
+
+	received_packet = server->received.packet;
+	received_message = server->received.message;
+	if (SDLNet_UDP_Recv(server->socket, received_packet))
 	{
 		received_message = (t_message *)(received_packet->data);
-		str = ft_strndup(received_message->data, ft_strlen(received_message->data));
-
-		printf("on recoit :%s\n", str);
-		printf("port: %u\n", received_packet->address.port);
-		printf("host: %u\n", received_packet->address.host);
+		printf("on a recu un truc de rue\n");
 		
-		packet->address.port = received_packet->address.port;
-		packet->address.host = received_packet->address.host;
-		if (!i)
+		server->to_send.packet->address.port = received_packet->address.port;
+		server->to_send.packet->address.host = received_packet->address.host;
+		server->to_send.packet->len = sizeof(t_message);
+		
+		if ((nb_packets = SDLNet_UDP_Send(server->socket, -1,
+				server->to_send.packet)) == 0)
 		{
-			i = 1;
-			clientSocket = SDLNet_UDP_Open(0);
-			if (clientSocket == NULL)
-			{
-				printf("boloss\n");
-				exit(1);
-			}
+			printf("fail de send\n");
 		}
-		SendFromServer("OLALALALALALALALALA C BONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\n");
+		else
+		{
+			printf("successfully sent %d\n", nb_packets);
+		}
 	}
-	else 
-		printf(RED"on a recu R\n"RESET);
 }
 
 void	ft_process_server(char *port)
 {
-	if (!InitServer(atoi(port), sizeof(t_message)))
+	int stop;
+	t_client_socket clientSockets[MAX_CLIENTS];
+	t_server server;
+	if (!ft_init_server(&server, atoi(port)))
 		exit(1);
-	while (1)
+	while (server.on)
 	{
-		CheckForData();
+		ft_check_for_data(&server);
 	}
 }

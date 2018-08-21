@@ -6,7 +6,7 @@
 #    By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/26 20:58:27 by ldedier           #+#    #+#              #
-#    Updated: 2018/08/05 19:35:43 by ldedier          ###   ########.fr        #
+#    Updated: 2018/08/21 21:56:25 by ldedier          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -45,7 +45,7 @@ LIBSDL2TTF_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_ttf/2.0.14/include/SDL2/
 LIBSDL2NET_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_net/2.0.1/include/SDL2/
 LIBSDL2MIXER_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_mixer/2.0.2_3/include/SDL2/
 
-SRCS_NO_PREFIX = main.c client.c server.c
+SRCS_NO_PREFIX = main.c client.c server.c network.c
 
 INCLUDES_NO_PREFIX = net.h
 
