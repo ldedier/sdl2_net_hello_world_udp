@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/22 01:42:53 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/08/23 00:37:01 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,17 +17,11 @@ int ft_send_data(t_client *client) //send from client to server
 {
 	int length;
 	int nb_packets;
-	/*
-	length = ft_strlen(str);
+	
+	client->to_send.message->player_index = client->player_index;
+	memcpy(client->to_send.packet, client->to_send.message, sizeof(t_client_message));
+	client->to_send.packet->len = sizeof(t_client_message);
 
-	memset(message->data, '\0', BUFF_SIZE);
-	memcpy(message->data, str, ft_strlen(str));
-	packet->len = sizeof(t_message);
-	memcpy(packet->data, message, sizeof(t_message));
-*/
-	printf("%u\n", client->to_send.packet->address.port);
-	printf("%u\n", client->to_send.packet->address.host);
-	client->to_send.packet->len = sizeof(t_message);
 	if ((nb_packets = SDLNet_UDP_Send(client->socket, -1,
 			client->to_send.packet)) == 0)
 	{
@@ -39,48 +33,41 @@ int ft_send_data(t_client *client) //send from client to server
 
 void ft_check_for_data_back(t_client *client)
 {
+	t_server_message *message;
 	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
 	{
-	//	received_message = (t_message *)(received_packet->data);
-	//	str = ft_strndup(received_message->data, ft_strlen(received_message->data));
-		printf("on recoit du serveur: un truc\n");
+		message = (t_server_message *)client->received.packet->data;
+		client->player_index = 	message->player_index;
 	}
-}
-
-
-int ft_init_bundle_client(t_bundle *bundle, size_t size)
-{
-	if (!(bundle->packet = ft_create_packet(size)))
-		return (0);
-	if (!(bundle->message = malloc(size)))
-		return(0);
-	return (1);
 }
 
 int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 {
-	if (!(ft_open_port(&(client->socket), 0)))
+	if (!(ft_open_port(&(client->socket), 0))) // take the first available port
 		return (0);
 	if (!ft_resolve_ip_address(&(client->server_ip), server_ip, remote_port))
 		return (0);
-	if (!ft_init_bundle_client(&(client->received), sizeof(t_message)))
+	if (!ft_init_server_bundle(&(client->received), sizeof(t_server_message)))
 		return (0);
-	if (!ft_init_bundle_client(&(client->to_send), sizeof(t_message)))
+	if (!ft_init_client_bundle(&(client->to_send), sizeof(t_client_message)))
 		return (0);
 	client->to_send.packet->address.port = client->server_ip.port;
 	client->to_send.packet->address.host = client->server_ip.host;
+	client->player_index = -1;
+	client->on = 1;
 	return (1);
 }
 
-void	ft_process_client(char *serverName, char *port, char *message)
+void	ft_process_client(char *serverName, char *port)
 {
 	t_client client;
 
 	if (!ft_init_client(&client, serverName, atoi(port)))
 		exit(1);
-	while (1)
+	while (client.on)
 	{
 		ft_send_data(&client);
 		ft_check_for_data_back(&client);
+		printf("%d\n", client.player_index);
 	}
 }
