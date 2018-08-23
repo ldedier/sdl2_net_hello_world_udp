@@ -48,6 +48,23 @@ void	ft_init_clients(t_client_manager cm[MAX_CLIENTS])
 	}
 }
 
+int		ft_get_client_index(t_client_manager cm[MAX_CLIENTS])
+{
+	int i;
+
+	i = 0;
+	while (i < MAX_CLIENTS)
+	{
+		if (cm[i].isfree)
+		{
+			cm[i].isfree = 0;
+			return (i);
+		}
+		i++;
+	}
+	return (-1);
+}
+
 int ft_init_server(t_server *server, int port)
 {
 	if (!ft_open_port(&(server->socket), port))
@@ -64,21 +81,25 @@ int ft_init_server(t_server *server, int port)
 void ft_check_for_data(t_server *server)
 {
 	char				*str;
-	UDPpacket			*received_packet;
-	t_client_message	*received_message;
 	int					nb_packets;
-
-	received_packet = server->received.packet;
-	received_message = server->received.message;
-	if (SDLNet_UDP_Recv(server->socket, received_packet))
+	t_client_message	*received_message;
+	if (SDLNet_UDP_Recv(server->socket, server->received.packet))
 	{
-		received_message = (t_client_message *)(received_packet->data);
+		received_message = (t_client_message *)(server->received.packet->data);
+		
 		printf("on a recu un truc de rue\n");
 
-		server->to_send.packet->address.port = received_packet->address.port;
-		server->to_send.packet->address.host = received_packet->address.host;
+		server->to_send.packet->address.port = server->received.packet->address.port;
+		server->to_send.packet->address.host = server->received.packet->address.host;
+
+		printf("player index received: %d\n", received_message->player_index);
+		if (received_message->player_index == -1)
+			server->to_send.message->player_index = ft_get_client_index(server->cm);
+		else
+			server->to_send.message->player_index = received_message->player_index;
 		
-		server->to_send.message->player_index = 1;
+		printf("%d\n", server->to_send.message->player_index);
+
 		memcpy(server->to_send.packet->data, server->to_send.message, sizeof(t_server_message));
 		server->to_send.packet->len = sizeof(t_server_message);
 		

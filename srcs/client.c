@@ -19,7 +19,7 @@ int ft_send_data(t_client *client) //send from client to server
 	int nb_packets;
 	
 	client->to_send.message->player_index = client->player_index;
-	memcpy(client->to_send.packet, client->to_send.message, sizeof(t_client_message));
+	memcpy(client->to_send.packet->data, client->to_send.message, sizeof(t_client_message));
 	client->to_send.packet->len = sizeof(t_client_message);
 
 	if ((nb_packets = SDLNet_UDP_Send(client->socket, -1,
@@ -33,11 +33,12 @@ int ft_send_data(t_client *client) //send from client to server
 
 void ft_check_for_data_back(t_client *client)
 {
-	t_server_message *message;
+	t_server_message *received_message;
+
 	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
 	{
-		message = (t_server_message *)client->received.packet->data;
-		client->player_index = 	message->player_index;
+		received_message = (t_server_message *)client->received.packet->data;
+		client->player_index = 	received_message->player_index;
 	}
 }
 
@@ -64,9 +65,10 @@ void	ft_process_client(char *serverName, char *port)
 
 	if (!ft_init_client(&client, serverName, atoi(port)))
 		exit(1);
+	
+	ft_send_data(&client);
 	while (client.on)
 	{
-		ft_send_data(&client);
 		ft_check_for_data_back(&client);
 		printf("%d\n", client.player_index);
 	}
