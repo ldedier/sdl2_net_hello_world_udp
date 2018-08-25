@@ -12,42 +12,13 @@
 
 #include "net.h"
 
-int ft_send_data(t_client *client) //send from client to server
+void	ft_init_keys(char keys[NB_KEYS])
 {
-	int length;
-	int nb_packets;
-	
-	client->to_send.message->player_index = client->player_index;
-	memcpy(client->to_send.packet->data, client->to_send.message, sizeof(t_client_message));
-	client->to_send.packet->len = sizeof(t_client_message);
+	int i;
 
-	if ((nb_packets = SDLNet_UDP_Send(client->socket, -1,
-			client->to_send.packet)) == 0)
-	{
-		printf("fail de send\n");
-		return 0;
-	}
-	return (1);
-}
-
-void ft_check_for_data_back(t_client *client)
-{
-	t_server_message *received_message;
-
-	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
-	{
-		client->last_tick = SDL_GetTicks();
-		received_message = (t_server_message *)client->received.packet->data;
-		client->player_index = 	received_message->player_index;
-	}
-	else
-	{
-		if (SDL_GetTicks() - client->last_tick > TIMEOUT_THRESHOLD)
-		{
-			printf("no response from server for too long.\n");
-			client->on = 0;
-		}
-	}
+	i = 0;
+	while (i < NB_KEYS)
+		keys[i++] = 0;
 }
 
 int	ft_init_client(t_client *client, char *server_ip, int remote_port)
@@ -60,9 +31,12 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 		return (0);
 	if (!ft_init_client_bundle(&(client->to_send), sizeof(t_client_message)))
 		return (0);
+	if (!ft_init_sdl("UDP 2 RUE", &(client->sdl)))
+		return (0);
+	ft_init_keys(client->to_send.message->keys);
 	client->to_send.packet->address.port = client->server_ip.port;
 	client->to_send.packet->address.host = client->server_ip.host;
-	client->player_index = -1;
+	client->received.message->player_index = -1;
 	client->on = 1;
 	client->socket_set = SDLNet_AllocSocketSet(1);
 	if (SDLNet_UDP_AddSocket(client->socket_set, client->socket) == -1)
@@ -72,28 +46,44 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 
 int		ft_receive_connection_packet(t_client *client)
 {
-	t_server_message *received_message;
-
 	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
 	{
 		client->last_tick = SDL_GetTicks();
-		received_message = (t_server_message *)client->received.packet->data;
-		return ((client->player_index = received_message->player_index));
+		client->received.message = (t_server_message *)client->received.packet->data;
+		return (client->received.message->player_index);
 	}
 	return (-1);
 }
 
-int			ft_connect_to_server(t_client *client)
+int ft_send_data(t_client *client) //send from client to server
+{
+	int length;
+	int nb_packets;
+
+	client->to_send.message->player_index = client->received.message->player_index;
+	memcpy(client->to_send.packet->data, client->to_send.message, sizeof(t_client_message));
+	client->to_send.packet->len = sizeof(t_client_message);
+
+	if ((nb_packets = SDLNet_UDP_Send(client->socket, -1,
+					client->to_send.packet)) == 0)
+	{
+		printf("fail de send\n");
+		return 0;
+	}
+	return (1);
+}
+
+int		ft_connect_to_server(t_client *client)
 {
 	int		active_socket;
 	int 	nb_tries;
 
 	nb_tries = 0;
-	while (nb_tries < CONNECTION_RETRIES)
+	while (nb_tries < CONNECTION_RETRIES_LIMIT)
 	{
 		ft_send_data(client);
 		ft_printf("trying to connect to server...\n");
-		if ((active_socket = SDLNet_CheckSockets(client->socket_set, 2000)))
+		if ((active_socket = SDLNet_CheckSockets(client->socket_set, 1500)))
 		{
 			if (ft_receive_connection_packet(client) == -1)
 			{
@@ -106,8 +96,81 @@ int			ft_connect_to_server(t_client *client)
 		nb_tries++;
 	}
 	ft_printf("failed to connect to the server after %d retries\n",
-		CONNECTION_RETRIES);
+			CONNECTION_RETRIES_LIMIT);
 	return (0);
+}
+
+void	ft_render_players(t_client *client)
+{
+	t_game  game;
+	int i;
+	SDL_Rect rect;
+
+	rect.w = 100;
+	rect.h = 100;
+	game = client->received.message->game;
+	i = 0;
+	
+	SDL_SetRenderDrawColor(client->sdl.renderer, 255, 0, 0, 255);
+	while (i < MAX_CLIENTS)
+	{
+		if (!(game.players[i].dead))
+		{
+			rect.x = game.players[i].pos.x;
+			rect.y = game.players[i].pos.y;
+			SDL_RenderFillRect(client->sdl.renderer, &rect);
+		}
+		i++;
+	}
+}
+
+void    ft_render(t_client *client)
+{
+	SDL_SetRenderDrawColor(client->sdl.renderer, 0, 0, 0, 255);
+	SDL_RenderClear(client->sdl.renderer);
+	ft_render_players(client);
+	SDL_RenderPresent(client->sdl.renderer);
+}
+
+void ft_check_for_data_back(t_client *client)
+{
+	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
+	{
+		client->last_tick = SDL_GetTicks();
+		client->received.message =
+			(t_server_message *)client->received.packet->data;
+		ft_render(client);
+	}
+	else
+	{
+		if (SDL_GetTicks() - client->last_tick > TIMEOUT_THRESHOLD)
+		{
+			printf("no response from server for too long.\n");
+			client->on = 0;
+		}
+	}
+}
+
+void	ft_process_keys(t_client *client)
+{
+	SDL_Event event;
+
+	while (SDL_PollEvent(&event))
+	{
+		if ((event.type == SDL_QUIT) || (event.type == SDL_KEYDOWN &&
+					event.key.keysym.sym == SDLK_ESCAPE))
+			client->on = 0;
+		else if (event.type == SDL_KEYDOWN && !event.key.repeat)
+			ft_process_keydown(client, event.key.keysym.sym);
+		else if (event.type == SDL_KEYUP)
+			ft_process_keyup(client, event.key.keysym.sym);
+		else if (event.type == SDL_MOUSEBUTTONDOWN && !event.key.repeat)
+			ft_process_mousedown(client, event.key.keysym.sym);
+		else if (event.type == SDL_MOUSEBUTTONUP)
+			ft_process_mouseup(client, event.key.keysym.sym);
+	}
+	ft_process_keyboard(client, SDL_GetKeyboardState(NULL));
+	ft_process_mouse(client, SDL_GetMouseState(NULL, NULL));
 }
 
 void	ft_process_client(char *serverName, char *port)
@@ -120,11 +183,13 @@ void	ft_process_client(char *serverName, char *port)
 		client.on = 0;
 	else
 		ft_printf("successfully connected to server as player number #%d\n",
-			client.player_index + 1);
+		client.received.message->player_index + 1);
 	while (client.on)
 	{
+		ft_process_keys(&client);
 		ft_send_data(&client);
 		ft_check_for_data_back(&client);
+//		ft_render(&client);
 		SDL_Delay(1000 / TICKRATE);
 	}
 }
