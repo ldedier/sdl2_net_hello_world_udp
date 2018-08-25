@@ -21,12 +21,14 @@
 # include <SDL_net.h>
 # include <SDL_mixer.h>
 
-# define MAX_SOCKETS 4
-# define MAX_CLIENTS 3
+# define MAX_CLIENTS 32
 
 # define DEFAULT 0
 # define INIT_USERNAME 1
 # define FROM_SERVER 2
+# define CONNECTION_RETRIES 5
+# define TIMEOUT_THRESHOLD 500
+# define TICKRATE 30
 
 typedef struct			s_client_manager
 {
@@ -37,11 +39,13 @@ typedef struct			s_client_manager
 typedef struct			s_server_message
 {
 	char				player_index;
+	Uint32				message_number;
 }						t_server_message;
 
 typedef struct			s_client_message
 {
 	char				player_index;
+	Uint32				message_number;
 }						t_client_message;
 
 typedef struct			s_server_bundle
@@ -63,6 +67,8 @@ typedef struct			s_server
 	UDPsocket			socket;
 	t_client_manager	cm[MAX_CLIENTS];
 	int					on;
+	SDLNet_SocketSet	socket_set;
+	int					nb_clients;
 }						t_server;
 
 typedef struct			s_client
@@ -73,6 +79,8 @@ typedef struct			s_client
 	IPaddress			server_ip;
 	int					on;
 	char				player_index;
+	SDLNet_SocketSet	socket_set;
+	Uint32				last_tick;
 }						t_client;
 
 void					ft_process_client(char *serverName, char *port);
