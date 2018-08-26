@@ -28,9 +28,8 @@ void	ft_init_player(t_player *player)
 {
 	player->pos.x = 0;
 	player->pos.y = 0;
-	player->speed.x = 0;
-	player->speed.y = 0;
 	player->dead = 1;
+	player->angle = 0;
 }
 
 void	ft_init_game(t_game *game)
@@ -85,13 +84,28 @@ int		ft_get_client_index(t_server *server)
 	}
 	return (-1);
 }
-
+/*
 void	ft_process_engine(t_server *server, t_client_message *message)
 {
 	server->game.players[message->player_index].pos.x +=
 		(message->keys[KEY_RIGHT] - message->keys[KEY_LEFT]) * SPEED;
 	server->game.players[message->player_index].pos.y +=
 		(message->keys[KEY_DOWN] - message->keys[KEY_UP]) * SPEED;
+}
+*/
+
+void	ft_process_engine(t_server *server, t_client_message *message)
+{
+	double *angle = &(server->game.players[message->player_index].angle);
+
+	if (message->keys[KEY_UP])
+		*angle += (message->keys[KEY_RIGHT] - message->keys[KEY_LEFT]) * (M_PI / 40.0);
+	if (message->keys[KEY_DOWN])
+		*angle -= (message->keys[KEY_RIGHT] - message->keys[KEY_LEFT]) * (M_PI / 40.0);
+	server->game.players[message->player_index].pos.x -=
+		(message->keys[KEY_UP] - message->keys[KEY_DOWN]) * cos(*angle) * SPEED;
+	server->game.players[message->player_index].pos.y -=
+		(message->keys[KEY_UP] - message->keys[KEY_DOWN]) * sin(*angle) * SPEED;
 }
 
 int		ft_send_data_back(t_server *server)

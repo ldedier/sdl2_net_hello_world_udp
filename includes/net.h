@@ -19,10 +19,12 @@
 # include <SDL.h>
 # include <SDL_ttf.h>
 # include <SDL_net.h>
+# include <SDL_image.h>
 # include <SDL_mixer.h>
 
 //# define MAX_CLIENTS 460
 # define MAX_CLIENTS 32
+# define MAX_TEXTURES 10
 
 # define REGULAR 0
 # define DECONNEXION 1
@@ -43,15 +45,15 @@ typedef enum			e_keys_enum
 
 typedef struct			s_xy
 {
-	int					x;
-	int					y;
+	float				x;
+	float				y;
 }						t_xy;
 
 typedef struct			s_player
 {
 	t_xy				pos;
-	t_xy				speed;
 	int					dead;
+	double				angle;
 }						t_player;
 
 typedef struct			s_game
@@ -108,6 +110,7 @@ typedef struct     		s_sdl
 	SDL_Rect			screen;
 	SDL_Window			*window;
 	SDL_Renderer		*renderer;
+	SDL_Texture         *textures[MAX_TEXTURES];
 }						t_sdl;
 
 typedef struct			s_framerate

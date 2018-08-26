@@ -22,6 +22,25 @@ void	ft_init_keys(char keys[NB_KEYS])
 		keys[i++] = 0;
 }
 
+SDL_Texture	*ft_load_texture(t_sdl* sdl, char *filename)
+{
+	SDL_Texture	*res;
+
+	if (!(res = IMG_LoadTexture(sdl->renderer, filename)))
+	{
+		ft_putstr_fd(filename, 2);
+		ft_putstr_fd(": ", 2);
+		ft_error("could not load the file");
+	}
+	return (res);
+}
+
+void	ft_load_textures(t_sdl* sdl)
+{
+	sdl->textures[0] = ft_load_texture(sdl, PATH"/resources/car.png");
+	sdl->textures[1] = ft_load_texture(sdl, PATH"/resources/car2.png");
+}
+
 int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 {
 	if (!(ft_open_port(&(client->socket), 0))) // take the first available port
@@ -34,6 +53,7 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 		return (0);
 	if (!ft_init_sdl("UDP 2 RUE", &(client->sdl)))
 		return (0);
+	ft_load_textures(&(client->sdl)); // to protect
 	ft_init_keys(client->to_send.message->keys);
 	client->to_send.packet->address.port = client->server_ip.port;
 	client->to_send.packet->address.host = client->server_ip.host;
@@ -111,9 +131,12 @@ void	ft_render_players(t_client *client)
 	t_game  game;
 	int i;
 	SDL_Rect rect;
+	SDL_Point center;
 
-	rect.w = 100;
-	rect.h = 100;
+	rect.w = 300;
+	rect.h = 150;
+	
+	
 	game = client->received.message->game;
 	i = 0;
 
@@ -123,11 +146,16 @@ void	ft_render_players(t_client *client)
 		{
 			rect.x = game.players[i].pos.x;
 			rect.y = game.players[i].pos.y;
+
+			center.x = rect.w / 2;
+			center.y = rect.h / 2;
+
 			if (i % 2)
 				SDL_SetRenderDrawColor(client->sdl.renderer, 0, 0, 255, 255);
 			else
 				SDL_SetRenderDrawColor(client->sdl.renderer, 255, 0, 0, 255);
-			SDL_RenderFillRect(client->sdl.renderer, &rect);
+			SDL_RenderCopyEx(client->sdl.renderer, client->sdl.textures[0], NULL, &rect, game.players[i].angle * (180.0 / M_PI), &center, SDL_FLIP_NONE);
+		//	SDL_RenderFillRect(client->sdl.renderer, &rect);
 		}
 		i++;
 	}

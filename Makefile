@@ -42,6 +42,7 @@ LIBSDL2MIXER_INCLUDEDIR = ~/.brew/Cellar/sdl2_mixer/2.0.2_3/include/SDL2/
 LIBSDL2DIR_MB = /usr/local/lib
 LIBSDL2_INCLUDEDIR_MB = /usr/local/Cellar/sdl2/2.0.8/include/SDL2/
 LIBSDL2TTF_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_ttf/2.0.14/include/SDL2/
+LIBSDL2IMAGE_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_image/2.0.3/include/SDL2/
 LIBSDL2NET_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_net/2.0.1/include/SDL2/
 LIBSDL2MIXER_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_mixer/2.0.2_3/include/SDL2/
 
@@ -61,7 +62,8 @@ ifeq ($(MACBOOK), 1)
 	INC +=	-I $(LIBSDL2_INCLUDEDIR_MB)\
 			-I $(LIBSDL2TTF_INCLUDEDIR_MB)\
 			-I $(LIBSDL2NET_INCLUDEDIR_MB)\
-			-I $(LIBSDL2MIXER_INCLUDEDIR_MB)
+			-I $(LIBSDL2MIXER_INCLUDEDIR_MB)\
+			-I $(LIBSDL2IMAGE_INCLUDEDIR_MB)
 else
 	INC +=	-I $(LIBSDL2_INCLUDEDIR)\
 			-I $(LIBSDL2TTF_INCLUDEDIR)\
@@ -82,7 +84,7 @@ LFLAGS = -L $(LIBFTDIR) -lft -L $(LIBMATDIR) -lmat -fsanitize=address
 
 
 ifeq ($(MACBOOK), 1)
-	LFLAGS += -L $(LIBSDL2DIR_MB) -lsdl2 -lsdl2_ttf -lsdl2_net -lsdl2_mixer
+	LFLAGS += -L $(LIBSDL2DIR_MB) -lsdl2 -lsdl2_ttf -lsdl2_net -lsdl2_mixer -lsdl2_image
 
 else
 	LFLAGS += -L $(LIBSDL2DIR) -lsdl2 -lsdl2_ttf -lsdl2_net -lsdl2_mixer
