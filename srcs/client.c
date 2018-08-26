@@ -12,6 +12,7 @@
 
 #include "net.h"
 
+
 void	ft_init_keys(char keys[NB_KEYS])
 {
 	int i;
@@ -38,6 +39,8 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 	client->to_send.packet->address.host = client->server_ip.host;
 	client->received.message->player_index = -1;
 	client->on = 1;
+	client->framerate.previous = SDL_GetPerformanceCounter();
+	client->to_send.message->message_number = 0;
 	client->socket_set = SDLNet_AllocSocketSet(1);
 	if (SDLNet_UDP_AddSocket(client->socket_set, client->socket) == -1)
 		return (0);
@@ -50,17 +53,19 @@ int		ft_receive_connection_packet(t_client *client)
 	{
 		client->last_tick = SDL_GetTicks();
 		client->received.message = (t_server_message *)client->received.packet->data;
+		client->last_message_number = client->received.message->message_number;
 		return (client->received.message->player_index);
 	}
 	return (-1);
 }
 
-int ft_send_data(t_client *client) //send from client to server
+int ft_send_data(t_client *client, int flag) //send from client to server
 {
 	int length;
 	int nb_packets;
 
 	client->to_send.message->player_index = client->received.message->player_index;
+	client->to_send.message->flag = flag;
 	memcpy(client->to_send.packet->data, client->to_send.message, sizeof(t_client_message));
 	client->to_send.packet->len = sizeof(t_client_message);
 
@@ -70,6 +75,7 @@ int ft_send_data(t_client *client) //send from client to server
 		printf("fail de send\n");
 		return 0;
 	}
+	client->to_send.message->message_number++;
 	return (1);
 }
 
@@ -81,7 +87,7 @@ int		ft_connect_to_server(t_client *client)
 	nb_tries = 0;
 	while (nb_tries < CONNECTION_RETRIES_LIMIT)
 	{
-		ft_send_data(client);
+		ft_send_data(client, REGULAR);
 		ft_printf("trying to connect to server...\n");
 		if ((active_socket = SDLNet_CheckSockets(client->socket_set, 1500)))
 		{
@@ -110,14 +116,17 @@ void	ft_render_players(t_client *client)
 	rect.h = 100;
 	game = client->received.message->game;
 	i = 0;
-	
-	SDL_SetRenderDrawColor(client->sdl.renderer, 255, 0, 0, 255);
+
 	while (i < MAX_CLIENTS)
 	{
 		if (!(game.players[i].dead))
 		{
 			rect.x = game.players[i].pos.x;
 			rect.y = game.players[i].pos.y;
+			if (i % 2)
+				SDL_SetRenderDrawColor(client->sdl.renderer, 0, 0, 255, 255);
+			else
+				SDL_SetRenderDrawColor(client->sdl.renderer, 255, 0, 0, 255);
 			SDL_RenderFillRect(client->sdl.renderer, &rect);
 		}
 		i++;
@@ -130,6 +139,7 @@ void    ft_render(t_client *client)
 	SDL_RenderClear(client->sdl.renderer);
 	ft_render_players(client);
 	SDL_RenderPresent(client->sdl.renderer);
+	client->framerate.fps_counter++;
 }
 
 void ft_check_for_data_back(t_client *client)
@@ -139,6 +149,10 @@ void ft_check_for_data_back(t_client *client)
 		client->last_tick = SDL_GetTicks();
 		client->received.message =
 			(t_server_message *)client->received.packet->data;
+		if (client->received.message->message_number < client->last_message_number)
+			printf("wrong packet order:\navant %u\napres %u\n\n", client->last_message_number, client->received.message->message_number);
+		else	
+			client->last_message_number = client->received.message->message_number;
 		ft_render(client);
 	}
 	else
@@ -176,20 +190,24 @@ void	ft_process_keys(t_client *client)
 void	ft_process_client(char *serverName, char *port)
 {
 	t_client client;
-
 	if (!ft_init_client(&client, serverName, atoi(port)))
 		exit(1);
 	if (!ft_connect_to_server(&client))
-		client.on = 0;
+		exit(1);
 	else
 		ft_printf("successfully connected to server as player number #%d\n",
-		client.received.message->player_index + 1);
+				client.received.message->player_index + 1);
+	client.framerate.ms_counter = SDL_GetTicks();
 	while (client.on)
 	{
 		ft_process_keys(&client);
-		ft_send_data(&client);
+		ft_send_data(&client, REGULAR);
 		ft_check_for_data_back(&client);
-//		ft_render(&client);
-		SDL_Delay(1000 / TICKRATE);
+		//ft_render(&client);
+		ft_process_delta(&(client.framerate));
+		SDL_Delay(1000 / TICKRATE - client.framerate.delta);
+		//SDL_Delay(1000 / TICKRATE);
+		ft_print_fps(&(client.framerate));
 	}
+	ft_send_data(&client, DECONNEXION);
 }

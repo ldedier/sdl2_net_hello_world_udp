@@ -46,7 +46,7 @@ LIBSDL2NET_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_net/2.0.1/include/SDL2/
 LIBSDL2MIXER_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_mixer/2.0.2_3/include/SDL2/
 
 SRCS_NO_PREFIX =	main.c client.c server.c network.c sdl.c ft_events.c\
-					ft_events_state.c
+					ft_events_state.c framerate.c
 
 INCLUDES_NO_PREFIX = net.h
 

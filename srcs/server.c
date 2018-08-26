@@ -57,8 +57,10 @@ int ft_init_server(t_server *server, int port)
 	if (SDLNet_UDP_AddSocket(server->socket_set, server->socket) == -1)
 		return (0);
 	server->on = 1;
+	server->to_send.message->message_number = 0;
 	ft_init_clients(server->cm);
 	ft_init_game(&(server->game));
+	server->framerate.previous = SDL_GetPerformanceCounter();
 	server->nb_clients = 0;
 	return (1);
 }
@@ -75,6 +77,7 @@ int		ft_get_client_index(t_server *server)
 			server->cm[i].isfree = 0;
 			server->game.players[i].dead = 0;
 			server->cm[i].last_tick = SDL_GetTicks();
+			server->cm[i].last_message_number = 0;
 			server->nb_clients++;
 			return (i);
 		}
@@ -83,23 +86,19 @@ int		ft_get_client_index(t_server *server)
 	return (-1);
 }
 
-int		ft_process_client_message(t_server *server, t_client_message *message)
+void	ft_process_engine(t_server *server, t_client_message *message)
 {
-	server->to_send.message->player_index = message->player_index;
-	server->cm[message->player_index].last_tick = SDL_GetTicks();
-
 	server->game.players[message->player_index].pos.x +=
 		(message->keys[KEY_RIGHT] - message->keys[KEY_LEFT]) * SPEED;
 	server->game.players[message->player_index].pos.y +=
 		(message->keys[KEY_DOWN] - message->keys[KEY_UP]) * SPEED;
-	server->to_send.message->game = server->game;
-	return (1);
 }
 
-void	ft_send_data_back(t_server *server)
+int		ft_send_data_back(t_server *server)
 {
 	int		nb_packets;
 	
+	server->to_send.message->game = server->game;
 	server->to_send.packet->address.port = server->received.packet->address.port;
 	server->to_send.packet->address.host = server->received.packet->address.host;
 	
@@ -107,7 +106,39 @@ void	ft_send_data_back(t_server *server)
 	server->to_send.packet->len = sizeof(t_server_message);
 	if ((nb_packets = SDLNet_UDP_Send(server->socket, -1,
 					server->to_send.packet)) == 0)
+	{
 		printf("fail de send\n");
+		return (0);
+	}
+	server->to_send.message->message_number++;
+	return (1);
+}
+
+void	ft_deconnect(t_server *server, int player_index)
+{
+	server->cm[player_index].isfree = 1;
+	ft_init_player(&(server->game.players[player_index]));
+	server->nb_clients--;
+}
+
+int		ft_process_client_message(t_server *server, t_client_message *message)
+{
+	server->to_send.message->player_index = message->player_index;
+	server->cm[message->player_index].last_tick = SDL_GetTicks();
+
+	if (server->cm[message->player_index].last_message_number > message->message_number)
+		printf("wrong packet order:\navant %u\napres %u\n\n", server->cm[message->player_index].last_message_number, message->message_number);
+	else	
+		server->cm[message->player_index].last_message_number = message->message_number;
+	
+	if (message->flag == REGULAR)
+	{
+		ft_process_engine(server, message);
+		ft_send_data_back(server);
+	}
+	else if (message->flag == DECONNEXION)
+		ft_deconnect(server, message->player_index);
+	return (1);
 }
 
 void	ft_check_for_data(t_server *server)
@@ -118,10 +149,12 @@ void	ft_check_for_data(t_server *server)
 	{
 		received_message = (t_client_message *)(server->received.packet->data);
 		if (received_message->player_index == -1)
+		{
 			server->to_send.message->player_index = ft_get_client_index(server);
+			ft_send_data_back(server);
+		}
 		else
 			ft_process_client_message(server, received_message);
-		ft_send_data_back(server);
 	}
 }
 
@@ -135,11 +168,7 @@ void	ft_update_time_out(t_server *server)
 	while (i < MAX_CLIENTS)
 	{
 		if (!server->cm[i].isfree && ticks - server->cm[i].last_tick > TIMEOUT_THRESHOLD)
-		{
-			server->cm[i].isfree = 1;
-			ft_init_player(&(server->game.players[i]));
-			server->nb_clients--;
-		}
+			ft_deconnect(server, i);
 		i++;
 	}
 }
@@ -151,14 +180,17 @@ void	ft_process_server(char *port)
 
 	if (!ft_init_server(&server, ft_atoi(port)))
 		exit(1);
+	server.framerate.ms_counter = SDL_GetTicks();
 	while (server.on)
 	{
 		activity = SDLNet_CheckSockets(server.socket_set, 1000);
 		if (activity <= 0)
 			ft_printf("no activity...\n");
-		ft_check_for_data(&server);
+		else
+			ft_check_for_data(&server);
 		ft_update_time_out(&server);
-		ft_printf("nb_clients: %d\n", server.nb_clients);
+		ft_process_delta(&(server.framerate));
+//		SDL_Delay(1000 / (TICKRATE * (server.nb_clients + 1)) - server.framerate.delta);
 		SDL_Delay(1000 / (TICKRATE * (server.nb_clients + 1)));
 	}
 }
