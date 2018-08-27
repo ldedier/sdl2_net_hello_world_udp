@@ -6,7 +6,7 @@
 #    By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/26 20:58:27 by ldedier           #+#    #+#              #
-#    Updated: 2018/08/21 21:56:25 by ldedier          ###   ########.fr        #
+#    Updated: 2018/08/27 20:06:50 by ldedier          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -38,6 +38,7 @@ LIBSDL2_INCLUDEDIR = ~/.brew/Cellar/sdl2/2.0.8/include/SDL2/
 LIBSDL2TTF_INCLUDEDIR = ~/.brew/Cellar/sdl2_ttf/2.0.14/include/SDL2/
 LIBSDL2NET_INCLUDEDIR = ~/.brew/Cellar/sdl2_net/2.0.1/include/SDL2/
 LIBSDL2MIXER_INCLUDEDIR = ~/.brew/Cellar/sdl2_mixer/2.0.2_3/include/SDL2/
+LIBSDL2IMAGE_INCLUDEDIR =  ~/.brew/Cellar/sdl2_image/2.0.3/include/SDL2/
 
 LIBSDL2DIR_MB = /usr/local/lib
 LIBSDL2_INCLUDEDIR_MB = /usr/local/Cellar/sdl2/2.0.8/include/SDL2/
@@ -68,7 +69,8 @@ else
 	INC +=	-I $(LIBSDL2_INCLUDEDIR)\
 			-I $(LIBSDL2TTF_INCLUDEDIR)\
 			-I $(LIBSDL2NET_INCLUDEDIR)\
-			-I $(LIBSDL2MIXER_INCLUDEDIR)
+			-I $(LIBSDL2MIXER_INCLUDEDIR)\
+			-I $(LIBSDL2IMAGE_INCLUDEDIR)
 endif
 
 
@@ -84,12 +86,12 @@ LFLAGS = -L $(LIBFTDIR) -lft -L $(LIBMATDIR) -lmat -fsanitize=address
 
 
 ifeq ($(MACBOOK), 1)
-	LFLAGS += -L $(LIBSDL2DIR_MB) -lsdl2 -lsdl2_ttf -lsdl2_net -lsdl2_mixer -lsdl2_image
-
+	LFLAGS += -L $(LIBSDL2DIR_MB) 
 else
-	LFLAGS += -L $(LIBSDL2DIR) -lsdl2 -lsdl2_ttf -lsdl2_net -lsdl2_mixer
-
+	LFLAGS += -L $(LIBSDL2DIR)
 endif
+
+LFLAGS += -lsdl2 -lsdl2_ttf -lsdl2_net -lsdl2_mixer -lsdl2_image
 
 opti:
 	@make -j all
