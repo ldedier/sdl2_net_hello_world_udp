@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/07/30 19:45:00 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/22 22:28:43 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/03 19:53:12 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,11 +49,20 @@ typedef struct			s_xy
 	float				y;
 }						t_xy;
 
-typedef struct			s_player
+typedef struct			s_curve
 {
+	double				speed;
+	double				mobility;
+	int					color;
 	t_xy				pos;
 	int					dead;
 	double				angle;
+}						t_curve;
+
+typedef struct			s_player
+{
+	t_curve				curve;
+	int					score;
 }						t_player;
 
 typedef struct			s_game
