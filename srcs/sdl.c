@@ -6,11 +6,21 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/25 18:57:22 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/25 18:57:22 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/03 19:45:36 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "net.h"
+
+
+void    ft_set_dimensions(t_sdl *sdl)
+{
+	SDL_DisplayMode dm;
+
+	SDL_GetCurrentDisplayMode(0, &dm);
+	sdl->screen.w = dm.w;
+	sdl->screen.h = dm.h;
+}
 
 int     ft_init_sdl(char *name, t_sdl *sdl)
 {
@@ -21,8 +31,15 @@ int     ft_init_sdl(char *name, t_sdl *sdl)
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 		return (0);
+	ft_set_dimensions(sdl);
+	if (TTF_Init() < 0)
+		return (1);
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
+		return (0);
+	Mix_VolumeMusic(32);
 	if (!(sdl->window = SDL_CreateWindow(name, sdl->screen.x,
-					sdl->screen.y, sdl->screen.w, sdl->screen.h, 0)))
+					sdl->screen.y, sdl->screen.w, sdl->screen.h,
+						SDL_WINDOW_FULLSCREEN_DESKTOP)))
 		return (0);
 	if (!(sdl->renderer = SDL_CreateRenderer(sdl->window, -1, 0)))
 		return (0);
