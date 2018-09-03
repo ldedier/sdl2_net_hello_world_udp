@@ -1,0 +1,43 @@
+srcs/client.c:145:25: error: no member named 'dead' in 'struct s_player'
+                if (!(game.players[i].dead))
+                      ~~~~~~~~~~~~~~~ ^
+srcs/client.c:147:29: error: no member named 'pos' in 'struct s_player'
+                        rect.x = game.players[i].pos.x;
+                                 ~~~~~~~~~~~~~~~ ^
+srcs/client.c:148:29: error: no member named 'pos' in 'struct s_player'
+                        rect.y = game.players[i].pos.y;
+                                 ~~~~~~~~~~~~~~~ ^
+srcs/client.c:157:97: error: no member named 'angle' in 'struct s_player'
+                        SDL_RenderCopyEx(client->sdl.renderer, client->sdl.textures[0], NULL, &rect, game.players[i].angle * (180.0 / M_PI), &center, SDL_FLIP_NONE);
+                                                                                                     ~~~~~~~~~~~~~~~ ^
+4 errors generated.
+srcs/server.c:29:10: error: no member named 'pos' in 'struct s_player'
+        player->pos.x = 0;
+        ~~~~~~  ^
+srcs/server.c:30:10: error: no member named 'pos' in 'struct s_player'
+        player->pos.y = 0;
+        ~~~~~~  ^
+srcs/server.c:31:10: error: no member named 'dead' in 'struct s_player'
+        player->dead = 1;
+        ~~~~~~  ^
+srcs/server.c:32:10: error: no member named 'angle' in 'struct s_player'
+        player->angle = 0;
+        ~~~~~~  ^
+srcs/server.c:77:28: error: no member named 'dead' in 'struct s_player'
+                        server->game.players[i].dead = 0;
+                        ~~~~~~~~~~~~~~~~~~~~~~~ ^
+srcs/server.c:99:64: error: no member named 'angle' in 'struct s_player'
+        double *angle = &(server->game.players[message->player_index].angle);
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^
+srcs/server.c:105:46: error: no member named 'pos' in 'struct s_player'
+        server->game.players[message->player_index].pos.x -=
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^
+srcs/server.c:107:46: error: no member named 'pos' in 'struct s_player'
+        server->game.players[message->player_index].pos.y -=
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^
+8 errors generated.
+make[2]: *** [objs/client.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+make[2]: *** [objs/server.o] Error 1
+make[1]: *** [all] Error 2
+make: *** [macbook] Error 2

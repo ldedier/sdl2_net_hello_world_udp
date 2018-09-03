@@ -14,6 +14,7 @@
 # define NET_H
 
 # include "libft.h"
+# include "curvefever.h"
 # include <stdlib.h>
 # include <fcntl.h>
 # include <SDL.h>
@@ -43,31 +44,10 @@ typedef enum			e_keys_enum
 	NB_KEYS
 }						t_keys_enum;
 
-typedef struct			s_xy
-{
-	float				x;
-	float				y;
-}						t_xy;
-
-typedef struct			s_curve
-{
-	double				speed;
-	double				mobility;
-	int					color;
-	t_xy				pos;
-	int					dead;
-	double				angle;
-}						t_curve;
-
-typedef struct			s_player
-{
-	t_curve				curve;
-	int					score;
-}						t_player;
-
 typedef struct			s_game
 {
 	t_player			players[MAX_CLIENTS];
+	t_board				board;
 }						t_game;
 
 typedef struct			s_client_manager
