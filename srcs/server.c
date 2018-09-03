@@ -119,12 +119,15 @@ int		ft_send_data_back(t_server *server)
 	
 	memcpy(server->to_send.packet->data, server->to_send.message, sizeof(t_server_message));
 	server->to_send.packet->len = sizeof(t_server_message);
-	if ((nb_packets = SDLNet_UDP_Send(server->socket, -1,
-					server->to_send.packet)) == 0)
+	if ((nb_packets = SDLNet_UDP_Send(server->socket, -1, server->to_send.packet)) == 0)
+//	if ((nb_packets = SDLNet_UDP_SendV(server->socket, &(server->to_send.packet), 1)) == 0)
 	{
+		printf("SDLNet_UDP_Send: %s\n", SDLNet_GetError());
 		printf("fail de send\n");
 		return (0);
 	}
+	else
+		printf("swag\n");
 	server->to_send.message->message_number++;
 	return (1);
 }

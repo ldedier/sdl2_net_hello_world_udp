@@ -13,8 +13,8 @@
 #ifndef CURVEFEVER_H
 # define CURVEFEVER_H
 
-# define BOARD_WIDTH	700
-# define BOARD_HEIGHT	600
+# define BOARD_WIDTH	1
+# define BOARD_HEIGHT	9217 - 144
 
 typedef struct          s_xy
 {
@@ -34,13 +34,13 @@ typedef struct          s_player
 {
 	t_xy				pos;
 	t_xy				dir;
-	int					color;
-	
+//	int					color;
+//	
 	int					dead;
-	t_curve				curve;
-	double				speed;
+//	t_curve				curve;
+//	double				speed;
 	double				angle;
-	int					score;
+//	int					score;
 }						t_player;
 
 typedef struct			s_board

@@ -24,7 +24,7 @@
 # include <SDL_mixer.h>
 
 //# define MAX_CLIENTS 460
-# define MAX_CLIENTS 32
+# define MAX_CLIENTS 4
 # define MAX_TEXTURES 10
 
 # define REGULAR 0

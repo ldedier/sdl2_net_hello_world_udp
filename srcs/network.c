@@ -16,7 +16,9 @@ UDPpacket	*ft_create_packet(size_t packetSize)
 {
 	UDPpacket *packet;
 
-	packet = SDLNet_AllocPacket(packetSize);
+	if (!(packet = SDLNet_AllocPacket(packetSize)))
+		ft_error("alloc_packet_failed");
+	printf("%zu\n", packetSize);
 	return (packet);
 }
 
