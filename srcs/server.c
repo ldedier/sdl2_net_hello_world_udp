@@ -84,6 +84,7 @@ int		ft_get_client_index(t_server *server)
 	}
 	return (-1);
 }
+
 /*
 void	ft_process_engine(t_server *server, t_client_message *message)
 {
