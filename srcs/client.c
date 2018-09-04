@@ -53,6 +53,7 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 		return (0);
 	if (!ft_init_sdl("UDP 2 RUE", &(client->sdl)))
 		return (0);
+	client->vector = ft_create_packet_vector(sizeof(t_server_message)); //to protect
 	ft_load_textures(&(client->sdl)); // to protect
 	ft_init_keys(client->to_send.message->keys);
 	client->to_send.packet->address.port = client->server_ip.port;
@@ -69,10 +70,14 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 
 int		ft_receive_connection_packet(t_client *client)
 {
-	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
+	int nb_packets;
+
+	if ((nb_packets = SDLNet_UDP_RecvV(client->socket, client->vector.packets)))
 	{
+		printf("nb packets received: %d\n", nb_packets);
 		client->last_tick = SDL_GetTicks();
-		client->received.message = (t_server_message *)client->received.packet->data;
+		ft_memcpy_from_packet_vector(client->received.message, client->vector.packets);
+	//	client->received.message = (t_server_message *)client->received.packet->data;
 		client->last_message_number = client->received.message->message_number;
 		return (client->received.message->player_index);
 	}
@@ -172,11 +177,12 @@ void    ft_render(t_client *client)
 
 void ft_check_for_data_back(t_client *client)
 {
-	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
+	if (SDLNet_UDP_RecvV(client->socket, client->vector.packets))
 	{
 		client->last_tick = SDL_GetTicks();
-		client->received.message =
-			(t_server_message *)client->received.packet->data;
+//		client->received.message =
+//			(t_server_message *)client->received.packet->data;
+		ft_memcpy_from_packet_vector(client->received.message, client->vector.packets);
 		if (client->received.message->message_number < client->last_message_number)
 			printf("wrong packet order:\navant %u\napres %u\n\n", client->last_message_number, client->received.message->message_number);
 		else	

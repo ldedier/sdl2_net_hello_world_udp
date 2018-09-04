@@ -13,8 +13,8 @@
 #ifndef CURVEFEVER_H
 # define CURVEFEVER_H
 
-# define BOARD_WIDTH	1
-# define BOARD_HEIGHT	9217 - 144
+# define BOARD_WIDTH	700
+# define BOARD_HEIGHT	500
 
 typedef struct          s_xy
 {

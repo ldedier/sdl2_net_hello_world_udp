@@ -17,6 +17,7 @@
 # include "curvefever.h"
 # include <stdlib.h>
 # include <fcntl.h>
+# include <math.h>
 # include <SDL.h>
 # include <SDL_ttf.h>
 # include <SDL_net.h>
@@ -29,6 +30,8 @@
 
 # define REGULAR 0
 # define DECONNEXION 1
+
+# define MAX_UDP_PACKET_SIZE 64
 
 # define CONNECTION_RETRIES_LIMIT 5
 # define TIMEOUT_THRESHOLD 500
@@ -111,6 +114,12 @@ typedef struct			s_framerate
 	Uint32				ms_counter;
 }						t_framerate;
 
+typedef struct			s_packet_vector
+{
+	UDPpacket			**packets;
+	int					nb_packets;
+}						t_packet_vector;
+
 typedef struct			s_server
 {
 	t_client_bundle		received;
@@ -122,6 +131,8 @@ typedef struct			s_server
 	int					nb_clients;
 	t_game				game;
 	t_framerate			framerate;
+	t_packet_vector		vector;
+
 }						t_server;
 
 typedef struct			s_client
@@ -138,6 +149,7 @@ typedef struct			s_client
 	t_game				game;
 	t_sdl				sdl;
 	t_framerate			framerate;
+	t_packet_vector		vector;
 }						t_client;
 
 void					ft_process_client(char *serverName, char *port);
@@ -158,4 +170,8 @@ void					ft_process_keyboard(t_client *client, const Uint8* keys);
 void					ft_process_mouse(t_client *client, Uint32 keys);
 void					ft_process_delta(t_framerate *framerate);
 void					ft_print_fps(t_framerate *framerate);
+t_packet_vector			ft_create_packet_vector(size_t data_size);
+void					ft_memcpy_to_packet_vector(void *source, UDPpacket **packet_vector, size_t size);
+void					ft_memcpy_from_packet_vector(void *dest, UDPpacket **packet_vector);
+void					ft_address_packets(UDPpacket **packet_vector, IPaddress address);
 #endif

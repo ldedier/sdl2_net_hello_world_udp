@@ -52,6 +52,7 @@ int ft_init_server(t_server *server, int port)
 		return (0);
 	if (!ft_init_server_bundle(&(server->to_send), sizeof(t_server_message)))
 		return (0);
+	server->vector = ft_create_packet_vector(sizeof(t_server_message)); //to protect
 	server->socket_set = SDLNet_AllocSocketSet(1);
 	if (SDLNet_UDP_AddSocket(server->socket_set, server->socket) == -1)
 		return (0);
@@ -117,17 +118,20 @@ int		ft_send_data_back(t_server *server)
 	server->to_send.packet->address.port = server->received.packet->address.port;
 	server->to_send.packet->address.host = server->received.packet->address.host;
 	
-	memcpy(server->to_send.packet->data, server->to_send.message, sizeof(t_server_message));
+	ft_address_packets(server->vector.packets, server->received.packet->address);
+
+	ft_memcpy_to_packet_vector(server->to_send.message, server->vector.packets, sizeof(t_server_message));
+//	memcpy(server->to_send.packet->data, server->to_send.message, sizeof(t_server_message));
 	server->to_send.packet->len = sizeof(t_server_message);
-	if ((nb_packets = SDLNet_UDP_Send(server->socket, -1, server->to_send.packet)) == 0)
-//	if ((nb_packets = SDLNet_UDP_SendV(server->socket, &(server->to_send.packet), 1)) == 0)
+//	if ((nb_packets = SDLNet_UDP_Send(server->socket, -1, server->to_send.packet)) == 0)
+	if ((nb_packets = SDLNet_UDP_SendV(server->socket, server->vector.packets, server->vector.nb_packets)) == 0)
 	{
 		printf("SDLNet_UDP_Send: %s\n", SDLNet_GetError());
 		printf("fail de send\n");
 		return (0);
 	}
 	else
-		printf("swag\n");
+		printf("swag, nb_packets: %d\n", nb_packets);
 	server->to_send.message->message_number++;
 	return (1);
 }
