@@ -55,6 +55,7 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 		return (0);
 	ft_load_textures(&(client->sdl)); // to protect
 	ft_init_keys(client->to_send.message->keys);
+	ft_init_board(&(client->board));
 	client->to_send.packet->address.port = client->server_ip.port;
 	client->to_send.packet->address.host = client->server_ip.host;
 	client->received.message->player_index = -1;
@@ -72,9 +73,21 @@ int		ft_receive_connection_packet(t_client *client)
 	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
 	{
 		client->last_tick = SDL_GetTicks();
-		client->received.message = (t_server_message *)client->received.packet->data;
-		client->last_message_number = client->received.message->message_number;
-		return (client->received.message->player_index);
+	
+		Uint8 *int_8_data = client->received.packet->data;
+		Uint32 *int_32_data = (Uint32 *)(&int_8_data[1]);
+	//	Uint32 *int_32i_data = (Uint32 *)client->received.packet->data;
+	
+		printf("%d\n", int_8_data[0]); // player_index
+		printf("%d\n", int_32_data[0]); // message_number
+		printf("%d\n", int_32_data[1]); // nb_colors
+		printf("%d\n", int_32_data[2]); // nb_events
+		printf("%d\n", int_32_data[3]); // nb_players
+	
+		
+		client->last_message_number = int_32_data[0];
+		printf("PLAYER INDEX %d\n", int_8_data[0]);
+		return (client->received.message->player_index = int_8_data[0]);
 	}
 	return (-1);
 }
@@ -136,8 +149,7 @@ void	ft_render_players(t_client *client)
 	rect.w = 300;
 	rect.h = 150;
 	
-	
-	game = client->received.message->game;
+//	game = client->received.message->game;
 	i = 0;
 
 	while (i < MAX_CLIENTS)
@@ -170,13 +182,50 @@ void    ft_render(t_client *client)
 	client->framerate.fps_counter++;
 }
 
+void	ft_print_colored(t_colored colored)
+{
+	printf("(%d, %d), %d\n", colored.pos.x, colored.pos.y, colored.color);
+}
+
+void	ft_process_data_back(t_client *client)
+{
+	Uint8 *int_8_data = client->received.packet->data;
+	Uint32 *int_32_data = (Uint32 *)(&int_8_data[1]);
+
+	int nb_colors = int_32_data[1];
+	int nb_events = int_32_data[2];
+	int nb_players = int_32_data[3];
+	client->changes.nb_colored = nb_colors;
+	client->changes.nb_events = nb_events;
+	client->nb_clients = nb_players;
+	size_t header_size = 
+		sizeof(client->received.message->player_index) +
+		sizeof(client->last_message_number) +
+		sizeof(client->changes.nb_colored) +
+		sizeof(client->changes.nb_events) +
+		sizeof(client->nb_clients);
+
+
+	int		events_index = header_size + nb_colors * sizeof(t_colored);
+	
+	t_colored *colored_data = (t_colored *)(&int_8_data[header_size]);
+	char	*events_data = (char *)(&int_8_data[events_index]);
+	t_player	*players_data = (t_player *)(&int_8_data[events_index + nb_players * sizeof(char)]);
+
+	printf("nb_colors %d\n", int_32_data[1]); // nb_colors
+	printf("nb_events %d\n", int_32_data[2]); // nb_events
+	printf("nb_players %d\n", int_32_data[3]); // nb_players
+
+	client->last_message_number = int_32_data[0];
+}
+
 void ft_check_for_data_back(t_client *client)
 {
+	UDPpacket packet;
+
 	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
 	{
-		client->last_tick = SDL_GetTicks();
-		client->received.message =
-			(t_server_message *)client->received.packet->data;
+		ft_process_data_back(client);
 		if (client->received.message->message_number < client->last_message_number)
 			printf("wrong packet order:\navant %u\napres %u\n\n", client->last_message_number, client->received.message->message_number);
 		else	

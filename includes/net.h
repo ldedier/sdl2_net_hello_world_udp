@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/07/30 19:45:00 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/22 22:28:43 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/03 19:53:12 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,10 @@
 # define NET_H
 
 # include "libft.h"
+# include "curvefever.h"
 # include <stdlib.h>
 # include <fcntl.h>
+# include <math.h>
 # include <SDL.h>
 # include <SDL_ttf.h>
 # include <SDL_net.h>
@@ -23,11 +25,13 @@
 # include <SDL_mixer.h>
 
 //# define MAX_CLIENTS 460
-# define MAX_CLIENTS 32
+# define MAX_CLIENTS 4
 # define MAX_TEXTURES 10
 
 # define REGULAR 0
 # define DECONNEXION 1
+
+# define MAX_UDP_PACKET_SIZE 64
 
 # define CONNECTION_RETRIES_LIMIT 5
 # define TIMEOUT_THRESHOLD 500
@@ -43,19 +47,6 @@ typedef enum			e_keys_enum
 	NB_KEYS
 }						t_keys_enum;
 
-typedef struct			s_xy
-{
-	float				x;
-	float				y;
-}						t_xy;
-
-typedef struct			s_player
-{
-	t_xy				pos;
-	int					dead;
-	double				angle;
-}						t_player;
-
 typedef struct			s_game
 {
 	t_player			players[MAX_CLIENTS];
@@ -66,22 +57,16 @@ typedef struct			s_client_manager
 	Uint32				last_tick;
 	Uint32				last_message_number;
 	int					isfree;
+	t_changes			changes;
 }						t_client_manager;
 
 typedef struct			s_server_message
 {
-	char				player_index;
 	t_game				game;
+	t_changes			changes;
+	char				player_index;
 	Uint32				message_number;
 }						t_server_message;
-
-typedef struct			s_keys
-{
-	char				left;
-	char				right;
-	char				up;
-	char				down;
-}						t_keys;
 
 typedef struct			s_client_message
 {
@@ -122,6 +107,12 @@ typedef struct			s_framerate
 	Uint32				ms_counter;
 }						t_framerate;
 
+typedef struct			s_packet_vector
+{
+	UDPpacket			**packets;
+	int					nb_packets;
+}						t_packet_vector;
+
 typedef struct			s_server
 {
 	t_client_bundle		received;
@@ -132,6 +123,8 @@ typedef struct			s_server
 	SDLNet_SocketSet	socket_set;
 	int					nb_clients;
 	t_game				game;
+	t_board				board;
+	t_changes			changes;
 	t_framerate			framerate;
 }						t_server;
 
@@ -145,10 +138,13 @@ typedef struct			s_client
 	SDLNet_SocketSet	socket_set;
 	Uint32				last_tick;
 	Uint32				last_message_number;
-	t_player			player;
+//	t_player			player;
 	t_game				game;
 	t_sdl				sdl;
+	t_board				board;
+	t_changes			changes;
 	t_framerate			framerate;
+	int					nb_clients;
 }						t_client;
 
 void					ft_process_client(char *serverName, char *port);
@@ -169,4 +165,8 @@ void					ft_process_keyboard(t_client *client, const Uint8* keys);
 void					ft_process_mouse(t_client *client, Uint32 keys);
 void					ft_process_delta(t_framerate *framerate);
 void					ft_print_fps(t_framerate *framerate);
+t_packet_vector			ft_create_packet_vector(size_t data_size);
+void					ft_memcpy_to_packet_vector(void *source, UDPpacket **packet_vector, size_t size);
+void					ft_memcpy_from_packet_vector(void *dest, UDPpacket **packet_vector);
+void					ft_address_packets(UDPpacket **packet_vector, IPaddress address);
 #endif

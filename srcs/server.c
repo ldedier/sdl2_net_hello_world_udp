@@ -12,6 +12,12 @@
 
 #include "net.h"
 
+void	ft_reset_changes(t_changes *changes)
+{
+	changes->nb_events = 0;
+	changes->nb_colored = 0;
+}
+
 void	ft_init_clients(t_client_manager cm[MAX_CLIENTS])
 {
 	int i;
@@ -20,14 +26,27 @@ void	ft_init_clients(t_client_manager cm[MAX_CLIENTS])
 	while (i < MAX_CLIENTS)
 	{
 		cm[i].isfree = 1;
+		ft_reset_changes(&(cm[i].changes));
 		i++;
 	}
 }
 
-void	ft_init_player(t_player *player)
+void	ft_init_player(t_player *player, int index)
 {
-	player->pos.x = 0;
-	player->pos.y = 0;
+	if (index == 0)
+	{
+		player->pos.x = BOARD_WIDTH / 3;
+		player->pos.y = BOARD_HEIGHT / 3;
+		player->dir.x = 1;
+		player->dir.y = 0;
+	}
+	else
+	{
+		player->pos.x = (2 * BOARD_WIDTH) / 3;
+		player->pos.y = (2 * BOARD_HEIGHT) / 3;
+		player->dir.x = -1;
+		player->dir.y = 0;
+	}
 	player->dead = 1;
 	player->angle = 0;
 }
@@ -39,7 +58,7 @@ void	ft_init_game(t_game *game)
 	i = 0;
 	while (i < MAX_CLIENTS)
 	{
-		ft_init_player(&(game->players[i]));
+		ft_init_player(&(game->players[i]), i);
 		i++;
 	}
 }
@@ -59,6 +78,8 @@ int ft_init_server(t_server *server, int port)
 	server->to_send.message->message_number = 0;
 	ft_init_clients(server->cm);
 	ft_init_game(&(server->game));
+	ft_init_board(&(server->board));	
+	ft_reset_changes(&(server->changes));
 	server->framerate.previous = SDL_GetPerformanceCounter();
 	server->nb_clients = 0;
 	return (1);
@@ -84,16 +105,103 @@ int		ft_get_client_index(t_server *server)
 	}
 	return (-1);
 }
-/*
+
+t_vec2	ft_vec2_scalar(t_vec2 vec, float scalar)
+{
+	t_vec2 res;
+
+	res.x = vec.x * scalar;
+	res.y = vec.y * scalar;
+	return (res);
+}
+
+t_vec2	ft_vec2_add(t_vec2 vec1, t_vec2 vec2)
+{
+	t_vec2 res;
+
+	res.x = vec1.x + vec2.x;
+	res.y = vec1.y + vec2.y;
+	return res;
+}
+
+void	ft_update_direction(char keys[NB_KEYS], t_vec2 *dir)
+{
+	if (keys[KEY_DOWN] && dir->x && dir->y != -1)
+	{
+		dir->x = 0;
+		dir->y = 1;
+	}
+	if (keys[KEY_UP] && dir->x && dir->y != 1)
+	{
+		dir->x = 0;
+		dir->y = -1;
+	}
+	if (keys[KEY_RIGHT] && dir->y && dir->x != -1)
+	{
+		dir->y = 0;
+		dir->x = 1;
+	}
+	if (keys[KEY_LEFT] && dir->y && dir->x != 1)
+	{
+		dir->y = 0;
+		dir->x = -1;
+	}
+}
+
+int		ft_iz_okay(t_board board, t_vec2 vec)
+{
+	return (vec.x >= 0 && vec.x < board.current_dim.x
+				&& vec.y >= 0 && vec.y < board.current_dim.y
+					&& board.map[(int)vec.y][(int)vec.x] == 0);
+}
+
+void	ft_print_vec2(t_vec2 vec)
+{
+	printf("(%.2f, %.2f)\n", vec.x, vec.y);
+}
+
 void	ft_process_engine(t_server *server, t_client_message *message)
 {
-	server->game.players[message->player_index].pos.x +=
-		(message->keys[KEY_RIGHT] - message->keys[KEY_LEFT]) * SPEED;
-	server->game.players[message->player_index].pos.y +=
-		(message->keys[KEY_DOWN] - message->keys[KEY_UP]) * SPEED;
-}
-*/
+	t_vec2 to;
+	t_vec2 from;
+	t_vec2 iter;
+	
+	if (!server->game.players[message->player_index].dead)
+	{
+		ft_update_direction(message->keys, &(server->game.players[message->player_index].dir));
+		from = server->game.players[message->player_index].pos;
+		to = ft_vec2_add(from,
+				ft_vec2_scalar(server->game.players[message->player_index].dir, SPEED));
 
+		iter = from;
+		while ((int)iter.x != (int)to.x && (int)iter.y != (int)to.y)
+		{
+			ft_print_vec2(iter);
+			ft_print_vec2(to);
+			iter = ft_vec2_add(iter, server->game.players[message->player_index].dir);
+			if (ft_iz_okay(server->board, iter))
+			{
+				server->board.map[(int)iter.y][(int)iter.x] = server->game.players[message->player_index].color;
+				if (server->cm[message->player_index].changes.nb_colored >= MAX_COLORED)
+				{
+					printf("too much color changes\n");
+					exit(1);
+				}
+				server->cm[message->player_index].changes.colored[server->cm[message->player_index].changes.nb_colored].pos.x = (int)iter.x;
+				server->cm[message->player_index].changes.colored[server->cm[message->player_index].changes.nb_colored].pos.y = (int)iter.y;
+				server->cm[message->player_index].changes.colored[server->cm[message->player_index].changes.nb_colored].color = server->game.players[message->player_index].color;
+				server->cm[message->player_index].changes.nb_colored++;
+			}
+			else
+			{
+				server->game.players[message->player_index].dead = 1;
+			}
+		}
+		server->game.players[message->player_index].pos = to;
+	}
+}
+
+/*
 void	ft_process_engine(t_server *server, t_client_message *message)
 {
 	double *angle = &(server->game.players[message->player_index].angle);
@@ -107,17 +215,90 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 	server->game.players[message->player_index].pos.y -=
 		(message->keys[KEY_UP] - message->keys[KEY_DOWN]) * sin(*angle) * SPEED;
 }
+*/
+
+size_t	memcpy_ret(void *dest, void *src, size_t size)
+{
+	memcpy(dest, src, size);
+	return size;
+}
+
+int		ft_fill_packet_server(t_server *server)
+{
+	char player_index = server->to_send.message->player_index;
+	int size = 0;
+	Uint8 *data = server->to_send.packet->data;
+
+	size += memcpy_ret(&(data[size]), &(player_index), sizeof(player_index));
+	size += memcpy_ret(&(data[size]), &(server->to_send.message->message_number), sizeof(server->to_send.message->message_number));
+	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_colored), sizeof(server->cm[player_index].changes.nb_colored));
+	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_events), sizeof(server->cm[player_index].changes.nb_events));
+	size += memcpy_ret(&(data[size]), &(server->nb_clients), sizeof(server->nb_clients));
+
+	int i;
+	i = 0;
+	while (i < server->cm[player_index].changes.nb_colored)
+	{
+		size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[i]), sizeof(server->cm[player_index].changes.colored[i]));
+		i++;
+	}
+	i = 0;
+	while (i < server->cm[player_index].changes.nb_events)
+	{
+		size += memcpy_ret(&data[size], &(server->cm[player_index].changes.events[i]), sizeof(server->cm[player_index].changes.events[i]));
+		i++;
+	}
+	i = 0;
+	while (i < MAX_CLIENTS)
+	{
+		if (!server->cm[i].isfree)
+		{
+			size += memcpy_ret(&data[size], &(server->game.players[i]), sizeof(server->game.players[i]));
+		}
+		i++;
+	}
+	/*
+	server->cm[player_index].changes.colored[0].pos.x = 12;
+	server->cm[player_index].changes.colored[0].pos.y = 134;
+	server->cm[player_index].changes.colored[0].color = 1344;
+
+	server->cm[player_index].changes.colored[1].pos.x = 124;
+	server->cm[player_index].changes.colored[1].pos.y = 145;
+	server->cm[player_index].changes.colored[1].color = 14;
+
+	server->cm[player_index].changes.colored[2].pos.x = 124;
+	server->cm[player_index].changes.colored[2].pos.y = 1455;
+	server->cm[player_index].changes.colored[2].color = 14;
+
+	server->cm[player_index].changes.colored[3].pos.x = 124;
+	server->cm[player_index].changes.colored[3].pos.y = 145;
+	server->cm[player_index].changes.colored[3].color = 1444;
+
+
+	server->cm[player_index].changes.events[0] = 1;
+	server->cm[player_index].changes.events[1] = 7;
+	server->cm[player_index].changes.events[2] = 45;
+
+	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[0]), sizeof(server->cm[player_index].changes.colored[0]));
+	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[1]), sizeof(server->cm[player_index].changes.colored[1]));
+	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[2]), sizeof(server->cm[player_index].changes.colored[2]));
+	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[3]), sizeof(server->cm[player_index].changes.colored[3]));
+
+	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.events[0]), sizeof(server->cm[player_index].changes.events[0]));
+	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.events[1]), sizeof(server->cm[player_index].changes.events[1]));
+	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.events[2]), sizeof(server->cm[player_index].changes.events[2]));
+	*/
+	return (size);
+}
 
 int		ft_send_data_back(t_server *server)
 {
 	int		nb_packets;
-	
-	server->to_send.message->game = server->game;
+
 	server->to_send.packet->address.port = server->received.packet->address.port;
 	server->to_send.packet->address.host = server->received.packet->address.host;
-	
-	memcpy(server->to_send.packet->data, server->to_send.message, sizeof(t_server_message));
-	server->to_send.packet->len = sizeof(t_server_message);
+
+	server->to_send.packet->len = ft_fill_packet_server(server);
 	if ((nb_packets = SDLNet_UDP_Send(server->socket, -1,
 					server->to_send.packet)) == 0)
 	{
@@ -130,9 +311,12 @@ int		ft_send_data_back(t_server *server)
 
 void	ft_deconnect(t_server *server, int player_index)
 {
-	server->cm[player_index].isfree = 1;
-	ft_init_player(&(server->game.players[player_index]));
-	server->nb_clients--;
+	if (!server->cm[player_index].isfree)
+	{
+		server->cm[player_index].isfree = 1;
+		ft_init_player(&(server->game.players[player_index]), player_index);
+		server->nb_clients--;
+	}
 }
 
 int		ft_process_client_message(t_server *server, t_client_message *message)
@@ -162,6 +346,7 @@ void	ft_check_for_data(t_server *server)
 	if (SDLNet_UDP_Recv(server->socket, server->received.packet))
 	{
 		received_message = (t_client_message *)(server->received.packet->data);
+//		printf("%d\n", received_message->player_index);
 		if (received_message->player_index == -1)
 		{
 			server->to_send.message->player_index = ft_get_client_index(server);
@@ -182,7 +367,10 @@ void	ft_update_time_out(t_server *server)
 	while (i < MAX_CLIENTS)
 	{
 		if (!server->cm[i].isfree && ticks - server->cm[i].last_tick > TIMEOUT_THRESHOLD)
+		{
+			printf("player %d timed out!\n", i);
 			ft_deconnect(server, i);
+		}
 		i++;
 	}
 }
