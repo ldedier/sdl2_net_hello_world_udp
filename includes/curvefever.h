@@ -14,8 +14,8 @@
 # define CURVEFEVER_H
 
 # define BOARD_WIDTH	700
-# define BOARD_HEIGHT	500
-# define MAX_COLORED 100
+# define BOARD_HEIGHT	700
+# define MAX_COLORED	100
 # define MAX_FLAGS 15
 
 typedef struct          s_vec2
@@ -50,6 +50,20 @@ typedef struct          s_player
 //	int					score;
 }						t_player;
 
+typedef struct			s_argb
+{
+	char				b;
+	char				g;
+	char				r;
+	char				a;
+}						t_argb;
+
+typedef union			u_color
+{
+	int					color;
+	t_argb				argb;
+}						t_color;
+		
 typedef struct			s_colored
 {
 	t_ivec2				pos;
@@ -70,6 +84,16 @@ typedef struct			s_board
 	t_ivec2				current_dim;
 	t_ivec2				init_dim;
 }						t_board;
+
+typedef struct			s_client_response
+{
+	t_colored *colored_data;
+	char    *events_data;
+	t_player    *players_data;
+	int nb_players;
+	int nb_colored;
+	int nb_events;
+}						t_client_response;
 
 void					ft_init_board(t_board *board);
 #endif

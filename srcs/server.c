@@ -39,6 +39,7 @@ void	ft_init_player(t_player *player, int index)
 		player->pos.y = BOARD_HEIGHT / 3;
 		player->dir.x = 1;
 		player->dir.y = 0;
+		player->color = 0xff0000;
 	}
 	else
 	{
@@ -46,6 +47,7 @@ void	ft_init_player(t_player *player, int index)
 		player->pos.y = (2 * BOARD_HEIGHT) / 3;
 		player->dir.x = -1;
 		player->dir.y = 0;
+		player->color = 0x0000ff;
 	}
 	player->dead = 1;
 	player->angle = 0;
@@ -131,17 +133,17 @@ void	ft_update_direction(char keys[NB_KEYS], t_vec2 *dir)
 		dir->x = 0;
 		dir->y = 1;
 	}
-	if (keys[KEY_UP] && dir->x && dir->y != 1)
+	else if (keys[KEY_UP] && dir->x && dir->y != 1)
 	{
 		dir->x = 0;
 		dir->y = -1;
 	}
-	if (keys[KEY_RIGHT] && dir->y && dir->x != -1)
+	else if (keys[KEY_RIGHT] && dir->y && dir->x != -1)
 	{
 		dir->y = 0;
 		dir->x = 1;
 	}
-	if (keys[KEY_LEFT] && dir->y && dir->x != 1)
+	else if (keys[KEY_LEFT] && dir->y && dir->x != 1)
 	{
 		dir->y = 0;
 		dir->x = -1;
@@ -165,19 +167,15 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 	t_vec2 to;
 	t_vec2 from;
 	t_vec2 iter;
-	
 	if (!server->game.players[message->player_index].dead)
 	{
 		ft_update_direction(message->keys, &(server->game.players[message->player_index].dir));
 		from = server->game.players[message->player_index].pos;
 		to = ft_vec2_add(from,
 				ft_vec2_scalar(server->game.players[message->player_index].dir, SPEED));
-
 		iter = from;
-		while ((int)iter.x != (int)to.x && (int)iter.y != (int)to.y)
+		while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
 		{
-			ft_print_vec2(iter);
-			ft_print_vec2(to);
 			iter = ft_vec2_add(iter, server->game.players[message->player_index].dir);
 			if (ft_iz_okay(server->board, iter))
 			{
@@ -195,6 +193,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 			else
 			{
 				server->game.players[message->player_index].dead = 1;
+				printf("dead\n");
 			}
 		}
 		server->game.players[message->player_index].pos = to;
@@ -229,12 +228,16 @@ int		ft_fill_packet_server(t_server *server)
 	int size = 0;
 	Uint8 *data = server->to_send.packet->data;
 
+/*
+	server->cm[player_index].changes.nb_colored = 4;
+	server->cm[player_index].changes.nb_events = 3;
+	server->nb_clients = 1;
+*/	
 	size += memcpy_ret(&(data[size]), &(player_index), sizeof(player_index));
 	size += memcpy_ret(&(data[size]), &(server->to_send.message->message_number), sizeof(server->to_send.message->message_number));
 	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_colored), sizeof(server->cm[player_index].changes.nb_colored));
 	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_events), sizeof(server->cm[player_index].changes.nb_events));
 	size += memcpy_ret(&(data[size]), &(server->nb_clients), sizeof(server->nb_clients));
-
 	int i;
 	i = 0;
 	while (i < server->cm[player_index].changes.nb_colored)
@@ -305,6 +308,8 @@ int		ft_send_data_back(t_server *server)
 		printf("fail de send\n");
 		return (0);
 	}
+	else
+		ft_reset_changes(&(server->cm[server->to_send.message->player_index].changes));
 	server->to_send.message->message_number++;
 	return (1);
 }
@@ -315,7 +320,8 @@ void	ft_deconnect(t_server *server, int player_index)
 	{
 		server->cm[player_index].isfree = 1;
 		ft_init_player(&(server->game.players[player_index]), player_index);
-		server->nb_clients--;
+		if(--server->nb_clients == 0)
+			ft_init_board(&(server->board));
 	}
 }
 

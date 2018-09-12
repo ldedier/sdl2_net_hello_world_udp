@@ -36,7 +36,7 @@
 # define CONNECTION_RETRIES_LIMIT 5
 # define TIMEOUT_THRESHOLD 500
 # define TICKRATE 60
-# define SPEED 10
+# define SPEED 1
 
 typedef enum			e_keys_enum
 {
@@ -145,6 +145,7 @@ typedef struct			s_client
 	t_changes			changes;
 	t_framerate			framerate;
 	int					nb_clients;
+	t_client_response	response;
 }						t_client;
 
 void					ft_process_client(char *serverName, char *port);
