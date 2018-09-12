@@ -167,6 +167,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 	t_vec2 to;
 	t_vec2 from;
 	t_vec2 iter;
+	int i;
 	if (!server->game.players[message->player_index].dead)
 	{
 		ft_update_direction(message->keys, &(server->game.players[message->player_index].dir));
@@ -179,16 +180,24 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 			iter = ft_vec2_add(iter, server->game.players[message->player_index].dir);
 			if (ft_iz_okay(server->board, iter))
 			{
-				server->board.map[(int)iter.y][(int)iter.x] = server->game.players[message->player_index].color;
-				if (server->cm[message->player_index].changes.nb_colored >= MAX_COLORED)
+				server->board.map[(int)iter.y][(int)iter.x] = message->player_index + 1;
+				i = 0;
+				while (i < MAX_CLIENTS)
 				{
-					printf("too much color changes\n");
-					exit(1);
+					if (!server->cm[i].isfree)
+					{	
+						if (server->cm[i].changes.nb_colored >= MAX_COLORED)
+						{
+							printf("too much color changes\n");
+							exit(1);
+						}
+						server->cm[i].changes.colored[server->cm[i].changes.nb_colored].pos.x = (int)iter.x;
+						server->cm[i].changes.colored[server->cm[i].changes.nb_colored].pos.y = (int)iter.y;
+						server->cm[i].changes.colored[server->cm[i].changes.nb_colored].player_index = message->player_index;
+						server->cm[i].changes.nb_colored++;
+					}
+					i++;
 				}
-				server->cm[message->player_index].changes.colored[server->cm[message->player_index].changes.nb_colored].pos.x = (int)iter.x;
-				server->cm[message->player_index].changes.colored[server->cm[message->player_index].changes.nb_colored].pos.y = (int)iter.y;
-				server->cm[message->player_index].changes.colored[server->cm[message->player_index].changes.nb_colored].color = server->game.players[message->player_index].color;
-				server->cm[message->player_index].changes.nb_colored++;
 			}
 			else
 			{
@@ -199,22 +208,6 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 		server->game.players[message->player_index].pos = to;
 	}
 }
-
-/*
-void	ft_process_engine(t_server *server, t_client_message *message)
-{
-	double *angle = &(server->game.players[message->player_index].angle);
-
-	if (message->keys[KEY_UP])
-		*angle += (message->keys[KEY_RIGHT] - message->keys[KEY_LEFT]) * (M_PI / 40.0);
-	if (message->keys[KEY_DOWN])
-		*angle -= (message->keys[KEY_RIGHT] - message->keys[KEY_LEFT]) * (M_PI / 40.0);
-	server->game.players[message->player_index].pos.x -=
-		(message->keys[KEY_UP] - message->keys[KEY_DOWN]) * cos(*angle) * SPEED;
-	server->game.players[message->player_index].pos.y -=
-		(message->keys[KEY_UP] - message->keys[KEY_DOWN]) * sin(*angle) * SPEED;
-}
-*/
 
 size_t	memcpy_ret(void *dest, void *src, size_t size)
 {
@@ -233,6 +226,8 @@ int		ft_fill_packet_server(t_server *server)
 	server->cm[player_index].changes.nb_events = 3;
 	server->nb_clients = 1;
 */	
+	server->cm[player_index].changes.nb_events = 3;
+	
 	size += memcpy_ret(&(data[size]), &(player_index), sizeof(player_index));
 	size += memcpy_ret(&(data[size]), &(server->to_send.message->message_number), sizeof(server->to_send.message->message_number));
 	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_colored), sizeof(server->cm[player_index].changes.nb_colored));
@@ -277,20 +272,15 @@ int		ft_fill_packet_server(t_server *server)
 	server->cm[player_index].changes.colored[3].pos.y = 145;
 	server->cm[player_index].changes.colored[3].color = 1444;
 
-
 	server->cm[player_index].changes.events[0] = 1;
 	server->cm[player_index].changes.events[1] = 7;
 	server->cm[player_index].changes.events[2] = 45;
-
 	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[0]), sizeof(server->cm[player_index].changes.colored[0]));
 	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[1]), sizeof(server->cm[player_index].changes.colored[1]));
 	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[2]), sizeof(server->cm[player_index].changes.colored[2]));
 	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[3]), sizeof(server->cm[player_index].changes.colored[3]));
-
-	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.events[0]), sizeof(server->cm[player_index].changes.events[0]));
-	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.events[1]), sizeof(server->cm[player_index].changes.events[1]));
-	size += memcpy_ret(&data[size], &(server->cm[player_index].changes.events[2]), sizeof(server->cm[player_index].changes.events[2]));
 	*/
+
 	return (size);
 }
 

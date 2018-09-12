@@ -36,7 +36,6 @@
 # define CONNECTION_RETRIES_LIMIT 5
 # define TIMEOUT_THRESHOLD 500
 # define TICKRATE 60
-# define SPEED 1
 
 typedef enum			e_keys_enum
 {

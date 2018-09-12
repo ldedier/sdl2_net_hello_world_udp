@@ -13,8 +13,9 @@
 #ifndef CURVEFEVER_H
 # define CURVEFEVER_H
 
-# define BOARD_WIDTH	700
-# define BOARD_HEIGHT	700
+# define BOARD_WIDTH	1280
+# define BOARD_HEIGHT	720
+# define SPEED	0.1
 # define MAX_COLORED	100
 # define MAX_FLAGS 15
 
@@ -67,7 +68,7 @@ typedef union			u_color
 typedef struct			s_colored
 {
 	t_ivec2				pos;
-	int					color;
+	char				player_index;
 }						t_colored;
 
 typedef struct			s_changes
@@ -80,7 +81,7 @@ typedef struct			s_changes
 
 typedef struct			s_board
 {
-	int					map[BOARD_HEIGHT][BOARD_WIDTH];
+	char				map[BOARD_HEIGHT][BOARD_WIDTH];
 	t_ivec2				current_dim;
 	t_ivec2				init_dim;
 }						t_board;
