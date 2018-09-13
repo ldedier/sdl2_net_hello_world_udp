@@ -6,16 +6,16 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/09/03 20:41:12 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/03 20:41:12 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/13 20:10:15 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CURVEFEVER_H
 # define CURVEFEVER_H
 
-# define BOARD_WIDTH	1280
-# define BOARD_HEIGHT	720
-# define SPEED	0.1
+# define BOARD_WIDTH	2560
+# define BOARD_HEIGHT	1440
+# define SPEED	1
 # define MAX_COLORED	100
 # define MAX_FLAGS 15
 

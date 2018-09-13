@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/27 20:07:21 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/13 20:02:46 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,14 +78,14 @@ int		ft_receive_connection_packet(t_client *client)
 		Uint32 *int_32_data = (Uint32 *)(&int_8_data[1]);
 	//	Uint32 *int_32i_data = (Uint32 *)client->received.packet->data;
 	
-		printf("%d\n", int_8_data[0]); // player_index
-		printf("%d\n", int_32_data[0]); // message_number
-		printf("%d\n", int_32_data[1]); // nb_colors
-		printf("%d\n", int_32_data[2]); // nb_events
-		printf("%d\n", int_32_data[3]); // nb_players	
+//		printf("%d\n", int_8_data[0]); // player_index
+//		printf("%d\n", int_32_data[0]); // message_number
+//		printf("%d\n", int_32_data[1]); // nb_colors
+//		printf("%d\n", int_32_data[2]); // nb_events
+//		printf("%d\n", int_32_data[3]); // nb_players	
 	
 		client->last_message_number = int_32_data[0];
-		printf("PLAYER INDEX %d\n", int_8_data[0]);
+//		printf("PLAYER INDEX %d\n", int_8_data[0]);
 		return (client->received.message->player_index = int_8_data[0]);
 	}
 	return (-1);
@@ -238,7 +238,7 @@ void	ft_receive_data_back(t_client *client)
 	client->response.colored_data = (t_colored *)(&int_8_data[header_size]);
 	client->response.events_data = (char *)(&int_8_data[events_index]);
 	client->response.players_data = (t_player *)(&int_8_data[events_index + client->response.nb_events * sizeof(char)]);
-
+/*
 	int i = 0;
 	while(i < 3)
 		printf("%d\n", client->response.events_data[i++]);
@@ -250,6 +250,7 @@ void	ft_receive_data_back(t_client *client)
 	printf("nb_colors %d\n", int_32_data[1]); // nb_colors
 	printf("nb_events %d\n", int_32_data[2]); // nb_events
 	printf("nb_players %d\n", int_32_data[3]); // nb_players
+*/
 	client->last_message_number = int_32_data[0];
 }
 
