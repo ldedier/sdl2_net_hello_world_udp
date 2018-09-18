@@ -163,6 +163,7 @@ void					ft_process_mousedown(t_client *client, SDL_Keycode code);
 void					ft_process_mouseup(t_client *client, SDL_Keycode code);
 void					ft_process_keyboard(t_client *client, const Uint8* keys);
 void					ft_process_mouse(t_client *client, Uint32 keys);
+void					ft_process_delta_first(t_framerate *framerate);
 void					ft_process_delta(t_framerate *framerate);
 void					ft_print_fps(t_framerate *framerate);
 t_packet_vector			ft_create_packet_vector(size_t data_size);

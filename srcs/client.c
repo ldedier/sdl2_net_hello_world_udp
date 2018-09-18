@@ -171,6 +171,7 @@ void	ft_render_players(t_client *client)
 	}
 }
 
+/*
 void	ft_render_board(t_client *client)
 {
 	int i;
@@ -195,6 +196,35 @@ void	ft_render_board(t_client *client)
 		}
 		i++;
 	}
+}
+*/
+
+void	ft_render_board(t_client *client)
+{
+	int i;
+	int j;
+	int index;
+
+	int *pixels = (int *)client->sdl.surface->pixels;
+	int surface_width =  client->sdl.surface->w;
+	t_color c;
+	i = 0;
+	while (i < BOARD_HEIGHT)
+	{
+		j = 0;
+		while (j < BOARD_WIDTH)
+		{
+			if ((index = client->board.map[i][j]))
+			{
+				pixels[i * surface_width + j] = client->response.players_data[index - 1].color;
+			}
+			j++;
+		}
+		i++;
+	}
+	client->sdl.texture = SDL_CreateTextureFromSurface(client->sdl.renderer, client->sdl.surface);
+	SDL_RenderCopy(client->sdl.renderer, client->sdl.texture, NULL, NULL);
+	SDL_DestroyTexture(client->sdl.texture);
 }
 
 void    ft_render(t_client *client)
@@ -240,16 +270,14 @@ void	ft_receive_data_back(t_client *client)
 	client->response.players_data = (t_player *)(&int_8_data[events_index + client->response.nb_events * sizeof(char)]);
 
 	int i = 0;
-	while(i < 3)
-		printf("%d\n", client->response.events_data[i++]);
-	
 	i = 0;
-	while(i < 1)
-		ft_print_player(client->response.players_data[i++]);
-	
-	printf("nb_colors %d\n", int_32_data[1]); // nb_colors
-	printf("nb_events %d\n", int_32_data[2]); // nb_events
-	printf("nb_players %d\n", int_32_data[3]); // nb_players
+
+//	while(i < 1)
+//		ft_print_player(client->response.players_data[i++]);
+
+//	printf("nb_colors %d\n", int_32_data[1]); // nb_colors
+//	printf("nb_events %d\n", int_32_data[2]); // nb_events
+//	printf("nb_players %d\n", int_32_data[3]); // nb_players
 	client->last_message_number = int_32_data[0];
 }
 
@@ -258,6 +286,7 @@ void	ft_process_data_board(t_client *client)
 	int i;
 	t_colored colored;
 	i = 0;
+
 	while (i < client->response.nb_colored)
 	{
 		colored = client->response.colored_data[i];
@@ -271,12 +300,14 @@ void	ft_process_data_back(t_client *client)
 	ft_process_data_board(client);
 }
 
-void ft_check_for_data_back(t_client *client)
+void	ft_check_for_data_back(t_client *client)
 {
 	UDPpacket packet;
+	int activity;
 
-	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
+	if ((activity = SDLNet_CheckSockets(client->socket_set, TIMEOUT_THRESHOLD)))
 	{
+		SDLNet_UDP_Recv(client->socket, client->received.packet);
 		ft_receive_data_back(client);
 		ft_process_data_back(client);
 		if (client->received.message->message_number < client->last_message_number)
@@ -287,11 +318,8 @@ void ft_check_for_data_back(t_client *client)
 	}
 	else
 	{
-		if (SDL_GetTicks() - client->last_tick > TIMEOUT_THRESHOLD)
-		{
-			printf("no response from server for too long.\n");
-			client->on = 0;
-		}
+		printf("no response from server for too long.\n");
+		client->on = 0;
 	}
 }
 
@@ -330,14 +358,23 @@ void	ft_process_client(char *serverName, char *port)
 	client.framerate.ms_counter = SDL_GetTicks();
 	while (client.on)
 	{
+		ft_process_delta_first(&(client.framerate));
+		/*
 		ft_process_keys(&client);
 		ft_send_data(&client, REGULAR);
 		ft_check_for_data_back(&client);
+//		printf("ouai\n");
 		//ft_render(&client);
-		ft_process_delta(&(client.framerate));
-		SDL_Delay(1000 / TICKRATE - client.framerate.delta);
-		//SDL_Delay(1000 / TICKRATE);
+		*/
+			
+		client.framerate.fps_counter++;
 		ft_print_fps(&(client.framerate));
+		ft_process_delta(&(client.framerate));
+	//	SDL_Delay((1000 / TICKRATE) - (client.framerate.delta));
+		SDL_Delay((1000 / TICKRATE));
+//		SDL_Delay(13);
+//		printf("%f\n", 1000 / TICKRATE - (client.framerate.delta));
+		//SDL_Delay(1000 / TICKRATE);
 	}
 	ft_send_data(&client, DECONNEXION);
 }

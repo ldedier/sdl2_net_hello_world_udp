@@ -168,6 +168,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 	t_vec2 from;
 	t_vec2 iter;
 	int i;
+
 	if (!server->game.players[message->player_index].dead)
 	{
 		ft_update_direction(message->keys, &(server->game.players[message->player_index].dir));
@@ -185,7 +186,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 				while (i < MAX_CLIENTS)
 				{
 					if (!server->cm[i].isfree)
-					{	
+					{
 						if (server->cm[i].changes.nb_colored >= MAX_COLORED)
 						{
 							printf("too much color changes\n");
@@ -203,6 +204,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 			{
 				server->game.players[message->player_index].dead = 1;
 				printf("dead\n");
+				break;
 			}
 		}
 		server->game.players[message->player_index].pos = to;
@@ -226,14 +228,16 @@ int		ft_fill_packet_server(t_server *server)
 	server->cm[player_index].changes.nb_events = 3;
 	server->nb_clients = 1;
 */	
-	server->cm[player_index].changes.nb_events = 3;
+//	server->cm[player_index].changes.nb_events = 3;
 	
 	size += memcpy_ret(&(data[size]), &(player_index), sizeof(player_index));
 	size += memcpy_ret(&(data[size]), &(server->to_send.message->message_number), sizeof(server->to_send.message->message_number));
 	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_colored), sizeof(server->cm[player_index].changes.nb_colored));
 	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_events), sizeof(server->cm[player_index].changes.nb_events));
 	size += memcpy_ret(&(data[size]), &(server->nb_clients), sizeof(server->nb_clients));
+
 	int i;
+
 	i = 0;
 	while (i < server->cm[player_index].changes.nb_colored)
 	{
@@ -378,7 +382,7 @@ void	ft_process_server(char *port)
 
 	if (!ft_init_server(&server, ft_atoi(port)))
 		exit(1);
-	server.framerate.ms_counter = SDL_GetTicks();
+//	server.framerate.ms_counter = SDL_GetTicks();
 	while (server.on)
 	{
 		activity = SDLNet_CheckSockets(server.socket_set, 1000);
@@ -387,8 +391,9 @@ void	ft_process_server(char *port)
 		else
 			ft_check_for_data(&server);
 		ft_update_time_out(&server);
-		ft_process_delta(&(server.framerate));
+//		ft_process_delta(&(server.framerate));
 //		SDL_Delay(1000 / (TICKRATE * (server.nb_clients + 1)) - server.framerate.delta);
-		SDL_Delay(1000 / (TICKRATE * (server.nb_clients + 1)));
+		SDL_Delay(1);
+//		SDL_Delay(1000 / (TICKRATE * (server.nb_clients + 1)));
 	}
 }

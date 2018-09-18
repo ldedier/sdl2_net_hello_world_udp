@@ -15,7 +15,7 @@
 
 # define BOARD_WIDTH	1280
 # define BOARD_HEIGHT	720
-# define SPEED	0.1
+# define SPEED	10
 # define MAX_COLORED	100
 # define MAX_FLAGS 15
 

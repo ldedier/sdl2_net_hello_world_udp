@@ -12,12 +12,16 @@
 
 #include "net.h"
 
+void	ft_process_delta_first(t_framerate *framerate)
+{
+	framerate->previous = SDL_GetPerformanceCounter();
+}
+
 void	ft_process_delta(t_framerate *framerate)
 {
 	framerate->current = SDL_GetPerformanceCounter();
 	framerate->delta = framerate->current - framerate->previous;
 	framerate->delta /= 1000000000;
-	framerate->previous = SDL_GetPerformanceCounter();
 }
 
 void	ft_print_fps(t_framerate *framerate)
