@@ -37,16 +37,14 @@ void	ft_init_player(t_player *player, int index)
 	{
 		player->pos.x = BOARD_WIDTH / 3;
 		player->pos.y = BOARD_HEIGHT / 3;
-		player->dir.x = 1;
-		player->dir.y = 0;
+		player->angle = 0;
 		player->color = 0xff0000;
 	}
 	else
 	{
 		player->pos.x = (2 * BOARD_WIDTH) / 3;
 		player->pos.y = (2 * BOARD_HEIGHT) / 3;
-		player->dir.x = -1;
-		player->dir.y = 0;
+		player->angle = M_PI;
 		player->color = 0x0000ff;
 	}
 	player->dead = 1;
@@ -126,28 +124,21 @@ t_vec2	ft_vec2_add(t_vec2 vec1, t_vec2 vec2)
 	return res;
 }
 
-void	ft_update_direction(char keys[NB_KEYS], t_vec2 *dir)
+t_vec2	ft_vec2_dest(t_vec2 pos, double angle, float speed)
 {
-	if (keys[KEY_DOWN] && dir->x && dir->y != -1)
-	{
-		dir->x = 0;
-		dir->y = 1;
-	}
-	else if (keys[KEY_UP] && dir->x && dir->y != 1)
-	{
-		dir->x = 0;
-		dir->y = -1;
-	}
-	else if (keys[KEY_RIGHT] && dir->y && dir->x != -1)
-	{
-		dir->y = 0;
-		dir->x = 1;
-	}
-	else if (keys[KEY_LEFT] && dir->y && dir->x != 1)
-	{
-		dir->y = 0;
-		dir->x = -1;
-	}
+	t_vec2 res;
+
+	res.x = pos.x + cos(angle) * speed;
+	res.y = pos.y + sin(angle) * speed;
+	return (res);
+}
+
+void	ft_update_angle(char keys[NB_KEYS], double *angle)
+{
+	if (keys[KEY_RIGHT])
+		*angle += DEFAULT_MOBILITY;
+	else if (keys[KEY_LEFT])
+		*angle -= DEFAULT_MOBILITY;
 }
 
 int		ft_iz_okay(t_board board, t_vec2 vec)
@@ -171,14 +162,15 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 
 	if (!server->game.players[message->player_index].dead)
 	{
-		ft_update_direction(message->keys, &(server->game.players[message->player_index].dir));
+		ft_update_angle(message->keys, &(server->game.players[message->player_index].angle));
+
 		from = server->game.players[message->player_index].pos;
-		to = ft_vec2_add(from,
-				ft_vec2_scalar(server->game.players[message->player_index].dir, SPEED));
+		to = ft_vec2_dest(from, server->game.players[message->player_index].angle, SPEED);
 		iter = from;
+
 		while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
 		{
-			iter = ft_vec2_add(iter, server->game.players[message->player_index].dir);
+			iter = ft_vec2_dest(iter, server->game.players[message->player_index].angle, 1);
 			if (ft_iz_okay(server->board, iter))
 			{
 				server->board.map[(int)iter.y][(int)iter.x] = message->player_index + 1;

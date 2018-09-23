@@ -15,9 +15,10 @@
 
 # define BOARD_WIDTH	1280
 # define BOARD_HEIGHT	720
-# define SPEED	1
+# define SPEED			1
 # define MAX_COLORED	100
-# define MAX_FLAGS 15
+# define MAX_FLAGS		15
+# define DEFAULT_MOBILITY M_PI / 2
 
 typedef struct          s_vec2
 {
@@ -42,7 +43,6 @@ typedef struct          s_curve
 typedef struct          s_player
 {
 	t_vec2				pos;
-	t_vec2				dir;
 	int					color;	
 	int					dead;
 //	t_curve				curve;
@@ -88,12 +88,12 @@ typedef struct			s_board
 
 typedef struct			s_client_response
 {
-	t_colored *colored_data;
-	char    *events_data;
-	t_player    *players_data;
-	int nb_players;
-	int nb_colored;
-	int nb_events;
+	t_colored			*colored_data;
+	char				*events_data;
+	t_player			*players_data;
+	int					nb_players;
+	int					nb_colored;
+	int					nb_events;
 }						t_client_response;
 
 void					ft_init_board(t_board *board);

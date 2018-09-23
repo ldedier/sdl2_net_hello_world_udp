@@ -40,8 +40,6 @@
 
 typedef enum			e_keys_enum
 {
-	KEY_DOWN,
-	KEY_UP,
 	KEY_RIGHT,
 	KEY_LEFT,
 	NB_KEYS

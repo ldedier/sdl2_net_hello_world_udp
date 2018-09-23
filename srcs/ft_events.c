@@ -14,10 +14,15 @@
 
 void	ft_process_keydown(t_client *client, SDL_Keycode keycode)
 {
+	if (keycode == SDLK_RIGHT)
+		client->to_send.message->keys[KEY_RIGHT] = 1;
+	else if (keycode == SDLK_LEFT)
+		client->to_send.message->keys[KEY_LEFT] = 1;
 }
 
 void	ft_process_keyup(t_client *client, SDL_Keycode keycode)
 {
+
 }
 
 void	ft_process_mousedown(t_client *client, SDL_Keycode keycode)
