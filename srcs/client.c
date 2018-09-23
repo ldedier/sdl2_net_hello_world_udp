@@ -359,22 +359,14 @@ void	ft_process_client(char *serverName, char *port)
 	while (client.on)
 	{
 		ft_process_delta_first(&(client.framerate));
-		/*
 		ft_process_keys(&client);
 		ft_send_data(&client, REGULAR);
 		ft_check_for_data_back(&client);
-//		printf("ouai\n");
 		//ft_render(&client);
-		*/
-			
-		client.framerate.fps_counter++;
 		ft_print_fps(&(client.framerate));
 		ft_process_delta(&(client.framerate));
-	//	SDL_Delay((1000 / TICKRATE) - (client.framerate.delta));
-		SDL_Delay((1000 / TICKRATE));
-//		SDL_Delay(13);
-//		printf("%f\n", 1000 / TICKRATE - (client.framerate.delta));
-		//SDL_Delay(1000 / TICKRATE);
+		SDL_Delay(ft_fmax(0, (1000 / TICKRATE) - (client.framerate.delta)));
+	//	SDL_Delay((1000 / TICKRATE));
 	}
 	ft_send_data(&client, DECONNEXION);
 }

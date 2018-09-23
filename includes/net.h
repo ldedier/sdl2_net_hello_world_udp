@@ -23,6 +23,7 @@
 # include <SDL_net.h>
 # include <SDL_image.h>
 # include <SDL_mixer.h>
+# include <time.h>
 
 //# define MAX_CLIENTS 460
 # define MAX_CLIENTS 4
@@ -34,7 +35,7 @@
 # define MAX_UDP_PACKET_SIZE 64
 
 # define CONNECTION_RETRIES_LIMIT 5
-# define TIMEOUT_THRESHOLD 500
+# define TIMEOUT_THRESHOLD 5000
 # define TICKRATE 60
 
 typedef enum			e_keys_enum
