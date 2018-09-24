@@ -327,7 +327,7 @@ void	ft_process_keys(t_client *client)
 {
 	SDL_Event event;
 	
-	ft_bzero(client->to_send.message->keys, NB_KEYS);
+	//ft_bzero(client->to_send.message->keys, NB_KEYS);
 	while (SDL_PollEvent(&event))
 	{
 		if ((event.type == SDL_QUIT) || (event.type == SDL_KEYDOWN &&
@@ -342,7 +342,7 @@ void	ft_process_keys(t_client *client)
 		else if (event.type == SDL_MOUSEBUTTONUP)
 			ft_process_mouseup(client, event.key.keysym.sym);
 	}
-//	ft_process_keyboard(client, SDL_GetKeyboardState(NULL));
+	ft_process_keyboard(client, SDL_GetKeyboardState(NULL));
 //	ft_process_mouse(client, SDL_GetMouseState(NULL, NULL));
 }
 

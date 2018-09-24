@@ -82,6 +82,7 @@ int ft_init_server(t_server *server, int port)
 	ft_reset_changes(&(server->changes));
 	server->framerate.previous = SDL_GetPerformanceCounter();
 	server->nb_clients = 0;
+	server->s_changes.nb_colored = 0;
 	return (1);
 }
 
@@ -135,22 +136,53 @@ t_vec2	ft_vec2_dest(t_vec2 pos, double angle, float speed)
 
 void	ft_update_angle(char keys[NB_KEYS], double *angle)
 {
-	if (keys[KEY_RIGHT])
-		*angle += DEFAULT_MOBILITY;
-	else if (keys[KEY_LEFT])
+	if (keys[KEY_LEFT])
 		*angle -= DEFAULT_MOBILITY;
+	else if (keys[KEY_RIGHT])
+		*angle += DEFAULT_MOBILITY;
 }
 
-int		ft_iz_okay(t_board board, t_vec2 vec)
+int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from)
 {
+	if(board.map[(int)vec.y][(int)vec.x])
+	{
+		printf("olala pos not empty: (%d, %d)\n((%f, %f))\n",
+		(int)vec.x, (int)vec.y, vec.x, vec.y);
+	}
+//	printf("%d\n", board.map[(int)vec.y][(int)vec.x]);
 	return (vec.x >= 0 && vec.x < board.current_dim.x
-				&& vec.y >= 0 && vec.y < board.current_dim.y
-					&& board.map[(int)vec.y][(int)vec.x] == 0);
+			&& vec.y >= 0 && vec.y < board.current_dim.y
+			&&
+				((board.map[(int)vec.y][(int)vec.x] == 0) ||
+				(((int)from.x == (int)vec.x &&
+				(int)from.y == (int)vec.y))));
 }
+
 
 void	ft_print_vec2(t_vec2 vec)
 {
 	printf("(%.2f, %.2f)\n", vec.x, vec.y);
+}
+
+void	ft_print_ivec2(t_ivec2 vec)
+{
+	printf("(%d, %d)\n", vec.x, vec.y);
+}
+
+void	ft_update_map(t_server *server)
+{
+	int i;
+	t_colored colored;
+
+	i = 0;
+	while (i < server->s_changes.nb_colored)
+	{
+		colored = server->s_changes.colored[i];
+//		ft_print_colored(colored);
+		server->board.map[colored.pos.y][colored.pos.x] = colored.player_index + 1;
+		i++;
+	}
+	server->s_changes.nb_colored = 0;
 }
 
 void	ft_process_engine(t_server *server, t_client_message *message)
@@ -170,10 +202,14 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 
 		while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
 		{
-			iter = ft_vec2_dest(iter, server->game.players[message->player_index].angle, 1);
-			if (ft_iz_okay(server->board, iter))
+			iter = ft_vec2_dest(iter, server->game.players[message->player_index].angle, ft_fmin(1, SPEED));
+			if (ft_iz_okay(server->board, iter, from))
 			{
-				server->board.map[(int)iter.y][(int)iter.x] = message->player_index + 1;
+				server->s_changes.colored[server->s_changes.nb_colored].pos.x = (int)iter.x;
+				server->s_changes.colored[server->s_changes.nb_colored].pos.y = (int)iter.y;
+				server->s_changes.colored[server->s_changes.nb_colored].player_index = message->player_index;
+				server->s_changes.nb_colored++;
+				//server->board.map[(int)iter.y][(int)iter.x] = message->player_index + 1;
 				i = 0;
 				while (i < MAX_CLIENTS)
 				{
@@ -200,6 +236,9 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 			}
 		}
 		server->game.players[message->player_index].pos = to;
+//		printf("swag\n");
+//		ft_print_vec2(to);
+		ft_update_map(server);
 	}
 }
 

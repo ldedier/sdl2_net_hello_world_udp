@@ -117,6 +117,7 @@ typedef struct			s_server
 	t_server_bundle		to_send;
 	UDPsocket			socket;
 	t_client_manager	cm[MAX_CLIENTS];
+	t_server_changes	s_changes;
 	int					on;
 	SDLNet_SocketSet	socket_set;
 	int					nb_clients;

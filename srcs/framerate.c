@@ -28,7 +28,7 @@ void	ft_print_fps(t_framerate *framerate)
 	if (SDL_GetTicks() - framerate->ms_counter > 1000)
 	{
 		framerate->ms_counter = SDL_GetTicks();
-		printf("fps : %d\n", ft_min(60, framerate->fps_counter));
+		printf("fps : %d (%d)\n", ft_min(60, framerate->fps_counter), framerate->fps_counter);
 		//printf("fps : %d\n", framerate->fps_counter);
 		framerate->fps_counter = 0;
 	}

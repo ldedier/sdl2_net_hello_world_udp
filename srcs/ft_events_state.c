@@ -14,12 +14,8 @@
 
 void	ft_process_keyboard(t_client *client, const Uint8* keys)
 {
-	/*
 	client->to_send.message->keys[KEY_RIGHT] = keys[SDL_SCANCODE_RIGHT];
 	client->to_send.message->keys[KEY_LEFT] = keys[SDL_SCANCODE_LEFT];
-	client->to_send.message->keys[KEY_UP] = keys[SDL_SCANCODE_UP];
-	client->to_send.message->keys[KEY_DOWN] = keys[SDL_SCANCODE_DOWN];
-	*/
 }
 
 void	ft_process_mouse(t_client *client, Uint32 keys)
