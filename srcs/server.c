@@ -14,8 +14,8 @@
 
 void	ft_reset_changes(t_changes *changes)
 {
-	changes->nb_events = 0;
-	changes->nb_colored = 0;
+	changes->event_stack.nb_events = 0;
+	changes->colored_stack.nb_colored = 0;
 }
 
 void	ft_init_clients(t_client_manager cm[MAX_CLIENTS])
@@ -49,6 +49,7 @@ void	ft_init_player(t_player *player, int index)
 	}
 	player->dead = 1;
 	player->angle = 0;
+	player->radius = 2;
 }
 
 void	ft_init_game(t_game *game)
@@ -82,7 +83,7 @@ int ft_init_server(t_server *server, int port)
 	ft_reset_changes(&(server->changes));
 	server->framerate.previous = SDL_GetPerformanceCounter();
 	server->nb_clients = 0;
-	server->s_changes.nb_colored = 0;
+	server->colored_stack.nb_colored = 0;
 	return (1);
 }
 
@@ -105,6 +106,15 @@ int		ft_get_client_index(t_server *server)
 		i++;
 	}
 	return (-1);
+}
+
+t_vec2	ft_new_vec2(double x, double y)
+{
+	t_vec2 res;
+
+	res.x = x;
+	res.y = y;
+	return (res);
 }
 
 t_vec2	ft_vec2_scalar(t_vec2 vec, float scalar)
@@ -142,22 +152,55 @@ void	ft_update_angle(char keys[NB_KEYS], double *angle)
 		*angle += DEFAULT_MOBILITY;
 }
 
-int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from)
+
+int		ft_is_in_sphere(double radius, t_vec2 center, t_vec2 pos)
 {
-	if(board.map[(int)vec.y][(int)vec.x])
+	return ((pos.x - center.x) * (pos.x - center.x) + (pos.y - center.y) * (pos.y - center.y) < radius * radius);
+}
+
+int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2 except)
+{
+	int i;
+	int j;
+
+	i = center.y - radius;
+	while (i < center.y + radius)
+	{
+		j  = (int)center.x;
+		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius - MARGIN)
+		{
+			if (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)))
+				return (1);
+			j--;
+		}
+		j  = (int)center.x + 1;
+		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius - MARGIN)
+		{
+			if (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)))
+				return (1);
+			j++;
+		}
+		i++;
+	}
+	return (0);
+}
+
+
+int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, double radius)
+{
+	/*
+	if (board.map[(int)vec.y][(int)vec.x])
 	{
 		printf("olala pos not empty: (%d, %d)\n((%f, %f))\n",
 		(int)vec.x, (int)vec.y, vec.x, vec.y);
 	}
-//	printf("%d\n", board.map[(int)vec.y][(int)vec.x]);
+	*/
+//	printf("is_in_sphere(): %d\n", ft_is_in_sphere(radius, from, vec));
+//	printf("ft_collide_board_sphere(): %d\n", ft_collide_board_sphere(board, radius, vec, from));
 	return (vec.x >= 0 && vec.x < board.current_dim.x
-			&& vec.y >= 0 && vec.y < board.current_dim.y
-			&&
-				((board.map[(int)vec.y][(int)vec.x] == 0) ||
-				(((int)from.x == (int)vec.x &&
-				(int)from.y == (int)vec.y))));
+				&& vec.y >= 0 && vec.y < board.current_dim.y
+					&& !ft_collide_board_sphere(board, radius, vec, from));
 }
-
 
 void	ft_print_vec2(t_vec2 vec)
 {
@@ -169,20 +212,78 @@ void	ft_print_ivec2(t_ivec2 vec)
 	printf("(%d, %d)\n", vec.x, vec.y);
 }
 
-void	ft_update_map(t_server *server)
+void	ft_apply_changes(t_server *server)
 {
 	int i;
 	t_colored colored;
 
 	i = 0;
-	while (i < server->s_changes.nb_colored)
+	while (i < server->colored_stack.nb_colored)
 	{
-		colored = server->s_changes.colored[i];
+		colored = server->colored_stack.colored[i];
 //		ft_print_colored(colored);
 		server->board.map[colored.pos.y][colored.pos.x] = colored.player_index + 1;
 		i++;
 	}
-	server->s_changes.nb_colored = 0;
+	server->colored_stack.nb_colored = 0;
+}
+
+int		is_already_in_color_stack(t_colored_stack colored_stack, int x, int y)
+{
+	int i;
+
+	i = 0;
+	while (i < colored_stack.nb_colored)
+	{
+		if (colored_stack.colored[i].pos.x == x && colored_stack.colored[i].pos.y == y)
+			return (1);
+		i++;
+	}
+	return (0);
+}
+
+void	ft_add_color_to_stack(t_colored_stack *colored_stack, int x, int y, char player_index)
+{
+	if (colored_stack->nb_colored >= MAX_COLORED)
+	{
+		printf("too much color changes\n");
+		exit(1);
+	}
+	if (!is_already_in_color_stack(*colored_stack, x, y))
+	{
+		colored_stack->colored[colored_stack->nb_colored].pos.x = x;
+		colored_stack->colored[colored_stack->nb_colored].pos.y = y;
+		colored_stack->colored[colored_stack->nb_colored].player_index = player_index;
+		colored_stack->nb_colored++;
+	}
+}
+
+
+void	ft_stack_changes(t_server *server, t_colored_stack *colored_stack, t_vec2 iter, char player_index)
+{
+	double radius;
+	int i;
+	int j;
+
+	radius = server->game.players[player_index].radius;
+	
+	i = iter.y - radius;
+	while (i < iter.y + radius)
+	{
+		j  = (int)iter.x;
+		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
+		{
+			ft_add_color_to_stack(colored_stack, j, i, player_index);
+			j--;
+		}
+		j  = (int)iter.x + 1;
+		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
+		{
+			ft_add_color_to_stack(colored_stack, j, i, player_index);
+			j++;
+		}
+		i++;
+	}
 }
 
 void	ft_process_engine(t_server *server, t_client_message *message)
@@ -195,35 +296,21 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 	if (!server->game.players[message->player_index].dead)
 	{
 		ft_update_angle(message->keys, &(server->game.players[message->player_index].angle));
-
 		from = server->game.players[message->player_index].pos;
 		to = ft_vec2_dest(from, server->game.players[message->player_index].angle, SPEED);
 		iter = from;
-
 		while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
 		{
 			iter = ft_vec2_dest(iter, server->game.players[message->player_index].angle, ft_fmin(1, SPEED));
-			if (ft_iz_okay(server->board, iter, from))
+			if (ft_iz_okay(server->board, iter, from, server->game.players[message->player_index].radius))
 			{
-				server->s_changes.colored[server->s_changes.nb_colored].pos.x = (int)iter.x;
-				server->s_changes.colored[server->s_changes.nb_colored].pos.y = (int)iter.y;
-				server->s_changes.colored[server->s_changes.nb_colored].player_index = message->player_index;
-				server->s_changes.nb_colored++;
-				//server->board.map[(int)iter.y][(int)iter.x] = message->player_index + 1;
+				ft_stack_changes(server, &(server->colored_stack), iter, message->player_index);
 				i = 0;
 				while (i < MAX_CLIENTS)
 				{
 					if (!server->cm[i].isfree)
 					{
-						if (server->cm[i].changes.nb_colored >= MAX_COLORED)
-						{
-							printf("too much color changes\n");
-							exit(1);
-						}
-						server->cm[i].changes.colored[server->cm[i].changes.nb_colored].pos.x = (int)iter.x;
-						server->cm[i].changes.colored[server->cm[i].changes.nb_colored].pos.y = (int)iter.y;
-						server->cm[i].changes.colored[server->cm[i].changes.nb_colored].player_index = message->player_index;
-						server->cm[i].changes.nb_colored++;
+						ft_stack_changes(server, &(server->cm[i].changes.colored_stack), iter, message->player_index);
 					}
 					i++;
 				}
@@ -238,7 +325,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 		server->game.players[message->player_index].pos = to;
 //		printf("swag\n");
 //		ft_print_vec2(to);
-		ft_update_map(server);
+		ft_apply_changes(server);
 	}
 }
 
@@ -248,37 +335,79 @@ size_t	memcpy_ret(void *dest, void *src, size_t size)
 	return size;
 }
 
-int		ft_fill_packet_server(t_server *server)
+int		ft_get_server_packet_size(t_server *server)
 {
 	char player_index = server->to_send.message->player_index;
-	int size = 0;
-	Uint8 *data = server->to_send.packet->data;
-
-/*
-	server->cm[player_index].changes.nb_colored = 4;
-	server->cm[player_index].changes.nb_events = 3;
-	server->nb_clients = 1;
-*/	
-//	server->cm[player_index].changes.nb_events = 3;
-	
-	size += memcpy_ret(&(data[size]), &(player_index), sizeof(player_index));
-	size += memcpy_ret(&(data[size]), &(server->to_send.message->message_number), sizeof(server->to_send.message->message_number));
-	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_colored), sizeof(server->cm[player_index].changes.nb_colored));
-	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.nb_events), sizeof(server->cm[player_index].changes.nb_events));
-	size += memcpy_ret(&(data[size]), &(server->nb_clients), sizeof(server->nb_clients));
-
 	int i;
+	int size;
 
+	size = 0;
+	size += sizeof(player_index);
+	size += sizeof(server->to_send.message->message_number);
+	size += sizeof(server->cm[player_index].changes.colored_stack.nb_colored);
+	size += sizeof(server->cm[player_index].changes.event_stack.nb_events);
+	size += sizeof(server->nb_clients);
 	i = 0;
-	while (i < server->cm[player_index].changes.nb_colored)
+	while (i < server->cm[player_index].changes.colored_stack.nb_colored)
 	{
-		size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored[i]), sizeof(server->cm[player_index].changes.colored[i]));
+		size += sizeof(server->cm[player_index].changes.colored_stack.colored[i]);
 		i++;
 	}
 	i = 0;
-	while (i < server->cm[player_index].changes.nb_events)
+	while (i < server->cm[player_index].changes.event_stack.nb_events)
 	{
-		size += memcpy_ret(&data[size], &(server->cm[player_index].changes.events[i]), sizeof(server->cm[player_index].changes.events[i]));
+		size += sizeof(server->cm[player_index].changes.event_stack.events[i]);
+		i++;
+	}
+	i = 0;
+	while (i < MAX_CLIENTS)
+	{
+		if (!server->cm[i].isfree)
+			size += sizeof(server->game.players[i]);
+		i++;
+	}
+	return (size);
+}
+
+int		ft_fill_packet_server(t_server *server)
+{
+	char player_index = server->to_send.message->player_index;
+	int size;
+	int i;
+	
+	size = 0;
+/*
+	server->cm[player_index].changes.colored_stack.nb_colored = 4;
+	server->cm[player_index].changes.event_stack.nb_events = 3;
+	server->nb_clients = 1;
+*/	
+//	server->cm[player_index].changes.event_stack.nb_events = 3;
+	
+	int		total_size;
+
+	total_size = ft_get_server_packet_size(server);
+
+	if (SDLNet_ResizePacket(server->to_send.packet, total_size) < total_size)
+		ft_error("could not resize packet");
+	
+	Uint8 *data = server->to_send.packet->data;
+	
+	size += memcpy_ret(&(data[size]), &(player_index), sizeof(player_index));
+	size += memcpy_ret(&(data[size]), &(server->to_send.message->message_number), sizeof(server->to_send.message->message_number));
+	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.colored_stack.nb_colored), sizeof(server->cm[player_index].changes.colored_stack.nb_colored));
+	size += memcpy_ret(&(data[size]), &(server->cm[player_index].changes.event_stack.nb_events), sizeof(server->cm[player_index].changes.event_stack.nb_events));
+	size += memcpy_ret(&(data[size]), &(server->nb_clients), sizeof(server->nb_clients));
+
+	i = 0;
+	while (i < server->cm[player_index].changes.colored_stack.nb_colored)
+	{
+		size += memcpy_ret(&data[size], &(server->cm[player_index].changes.colored_stack.colored[i]), sizeof(server->cm[player_index].changes.colored_stack.colored[i]));
+		i++;
+	}
+	i = 0;
+	while (i < server->cm[player_index].changes.event_stack.nb_events)
+	{
+		size += memcpy_ret(&data[size], &(server->cm[player_index].changes.event_stack.events[i]), sizeof(server->cm[player_index].changes.event_stack.events[i]));
 		i++;
 	}
 	i = 0;
@@ -322,11 +451,14 @@ int		ft_fill_packet_server(t_server *server)
 int		ft_send_data_back(t_server *server)
 {
 	int		nb_packets;
+	int		packet_size;
 
 	server->to_send.packet->address.port = server->received.packet->address.port;
 	server->to_send.packet->address.host = server->received.packet->address.host;
 
-	server->to_send.packet->len = ft_fill_packet_server(server);
+	packet_size = ft_fill_packet_server(server);
+	server->to_send.packet->len = packet_size;
+
 	if ((nb_packets = SDLNet_UDP_Send(server->socket, -1,
 					server->to_send.packet)) == 0)
 	{
@@ -424,7 +556,7 @@ void	ft_process_server(char *port)
 		ft_update_time_out(&server);
 //		ft_process_delta(&(server.framerate));
 //		SDL_Delay(1000 / (TICKRATE * (server.nb_clients + 1)) - server.framerate.delta);
-		SDL_Delay(1);
+//		SDL_Delay(1);
 //		SDL_Delay(1000 / (TICKRATE * (server.nb_clients + 1)));
 	}
 }

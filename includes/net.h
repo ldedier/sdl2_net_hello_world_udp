@@ -35,7 +35,7 @@
 # define MAX_UDP_PACKET_SIZE 64
 
 # define CONNECTION_RETRIES_LIMIT 5
-# define TIMEOUT_THRESHOLD 5000
+# define TIMEOUT_THRESHOLD 500
 # define TICKRATE 60
 
 typedef enum			e_keys_enum
@@ -117,7 +117,7 @@ typedef struct			s_server
 	t_server_bundle		to_send;
 	UDPsocket			socket;
 	t_client_manager	cm[MAX_CLIENTS];
-	t_server_changes	s_changes;
+	t_colored_stack		colored_stack;
 	int					on;
 	SDLNet_SocketSet	socket_set;
 	int					nb_clients;

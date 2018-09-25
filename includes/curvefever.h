@@ -19,6 +19,7 @@
 # define MAX_COLORED		100
 # define MAX_FLAGS			15
 # define DEFAULT_MOBILITY	M_PI / 64
+# define MARGIN 0
 
 typedef struct          s_vec2
 {
@@ -35,7 +36,7 @@ typedef struct          s_ivec2
 typedef struct          s_curve
 {
 	double				default_mobility;
-	int					default_width;
+	int					default_radius;
 	double				default_speed;
 	double				default_dash_rate;
 }                       t_curve;
@@ -45,9 +46,10 @@ typedef struct          s_player
 	t_vec2				pos;
 	int					color;	
 	int					dead;
-//	t_curve				curve;
-//	double				speed;
+	t_curve				curve;
+	double				speed;
 	double				angle;
+	double				radius;
 //	int					score;
 }						t_player;
 
@@ -71,12 +73,22 @@ typedef struct			s_colored
 	char				player_index;
 }						t_colored;
 
-typedef struct			s_changes
+typedef struct			s_colored_stack
 {
 	t_colored			colored[MAX_COLORED];
 	int					nb_colored;
-	int					nb_events;
+}						t_colored_stack;
+
+typedef struct			s_event_stack
+{
 	char				events[MAX_FLAGS];
+	int					nb_events;
+}						t_event_stack;
+
+typedef struct			s_changes
+{
+	t_colored_stack		colored_stack;
+	t_event_stack		event_stack;
 }						t_changes;
 
 typedef struct			s_server_changes
