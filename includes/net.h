@@ -35,7 +35,7 @@
 # define MAX_UDP_PACKET_SIZE 64
 
 # define CONNECTION_RETRIES_LIMIT 5
-# define TIMEOUT_THRESHOLD 500
+# define TIMEOUT_THRESHOLD 5000
 # define TICKRATE 60
 
 typedef enum			e_keys_enum
@@ -141,7 +141,6 @@ typedef struct			s_client
 	t_game				game;
 	t_sdl				sdl;
 	t_board				board;
-	t_changes			changes;
 	t_framerate			framerate;
 	int					nb_clients;
 	t_client_response	response;

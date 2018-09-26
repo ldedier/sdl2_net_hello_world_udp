@@ -53,7 +53,7 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 		return (0);
 	if (!ft_init_sdl("UDP 2 RUE", &(client->sdl)))
 		return (0);
-	ft_load_textures(&(client->sdl)); // to protect
+	//	ft_load_textures(&(client->sdl)); // to protect
 	ft_init_keys(client->to_send.message->keys);
 	ft_init_board(&(client->board));
 	client->to_send.packet->address.port = client->server_ip.port;
@@ -73,17 +73,17 @@ int		ft_receive_connection_packet(t_client *client)
 	if (SDLNet_UDP_Recv(client->socket, client->received.packet))
 	{
 		client->last_tick = SDL_GetTicks();
-	
+
 		Uint8 *int_8_data = client->received.packet->data;
 		Uint32 *int_32_data = (Uint32 *)(&int_8_data[1]);
-	//	Uint32 *int_32i_data = (Uint32 *)client->received.packet->data;
-	
+		//	Uint32 *int_32i_data = (Uint32 *)client->received.packet->data;
+
 		printf("%d\n", int_8_data[0]); // player_index
 		printf("%d\n", int_32_data[0]); // message_number
-		printf("%d\n", int_32_data[1]); // nb_colors
+		printf("%d\n", int_32_data[1]); // nb_moves
 		printf("%d\n", int_32_data[2]); // nb_events
 		printf("%d\n", int_32_data[3]); // nb_players	
-	
+
 		client->last_message_number = int_32_data[0];
 		printf("PLAYER INDEX %d\n", int_8_data[0]);
 		return (client->received.message->player_index = int_8_data[0]);
@@ -147,7 +147,7 @@ void	ft_render_players(t_client *client)
 
 	rect.w = 300;
 	rect.h = 150;
-	
+
 	i = 0;
 
 	while (i < MAX_CLIENTS)
@@ -165,39 +165,39 @@ void	ft_render_players(t_client *client)
 			else
 				SDL_SetRenderDrawColor(client->sdl.renderer, 255, 0, 0, 255);
 			SDL_RenderCopyEx(client->sdl.renderer, client->sdl.textures[0], NULL, &rect, game.players[i].angle * (180.0 / M_PI), &center, SDL_FLIP_NONE);
-		//	SDL_RenderFillRect(client->sdl.renderer, &rect);
+			//	SDL_RenderFillRect(client->sdl.renderer, &rect);
 		}
 		i++;
 	}
 }
 
 /*
-void	ft_render_board(t_client *client)
-{
-	int i;
-	int j;
-	int index;
+   void	ft_render_board(t_client *client)
+   {
+   int i;
+   int j;
+   int index;
 
-	t_color c;
-	i = 0;
-	while (i < BOARD_HEIGHT)
-	{
-		j = 0;
-		while (j < BOARD_WIDTH)
-		{
-			if((index = client->board.map[i][j]))
-			{
-				c.color = client->response.players_data[index - 1].color;
-		//		printf("%.6x\n", c.color);
-				SDL_SetRenderDrawColor(client->sdl.renderer, c.argb.r, c.argb.g, c.argb.b, 255);
-				SDL_RenderDrawPoint(client->sdl.renderer, j, i);
-			}
-			j++;
-		}
-		i++;
-	}
+   t_color c;
+   i = 0;
+   while (i < BOARD_HEIGHT)
+   {
+   j = 0;
+   while (j < BOARD_WIDTH)
+   {
+   if((index = client->board.map[i][j]))
+   {
+   c.color = client->response.players_data[index - 1].color;
+//		printf("%.6x\n", c.color);
+SDL_SetRenderDrawColor(client->sdl.renderer, c.argb.r, c.argb.g, c.argb.b, 255);
+SDL_RenderDrawPoint(client->sdl.renderer, j, i);
 }
-*/
+j++;
+}
+i++;
+}
+}
+ */
 
 void	ft_render_board(t_client *client)
 {
@@ -232,15 +232,11 @@ void    ft_render(t_client *client)
 	SDL_SetRenderDrawColor(client->sdl.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(client->sdl.renderer);
 	ft_render_board(client);
-//	ft_render_players(client);
+	//	ft_render_players(client);
 	SDL_RenderPresent(client->sdl.renderer);
 	client->framerate.fps_counter++;
 }
 
-void	ft_print_colored(t_colored colored)
-{
-	printf("(%d, %d), %d\n", colored.pos.x, colored.pos.y, colored.player_index);
-}
 
 void	ft_print_player(t_player player)
 {
@@ -252,45 +248,86 @@ void	ft_receive_data_back(t_client *client)
 	Uint8 *int_8_data = client->received.packet->data;
 	Uint32 *int_32_data = (Uint32 *)(&int_8_data[1]);
 
-	client->response.nb_colored = int_32_data[1];
+	client->response.nb_moves = int_32_data[1];
 	client->response.nb_events = int_32_data[2];
 	client->response.nb_players = int_32_data[3];
-	
-	size_t header_size = 
+
+	size_t header_size =
 		sizeof(client->received.message->player_index) +
 		sizeof(client->last_message_number) +
-		sizeof(client->response.nb_colored) +
+		sizeof(client->response.nb_moves) +
 		sizeof(client->response.nb_events) +
 		sizeof(client->response.nb_players);
 
-	int		events_index = header_size + client->response.nb_colored * sizeof(t_colored);
-	
-	client->response.colored_data = (t_colored *)(&int_8_data[header_size]);
+	int		events_index = header_size + client->response.nb_moves * sizeof(t_move);
+
+	client->response.move_data = (t_move *)(&int_8_data[header_size]);
 	client->response.events_data = (char *)(&int_8_data[events_index]);
 	client->response.players_data = (t_player *)(&int_8_data[events_index + client->response.nb_events * sizeof(char)]);
 
-	int i = 0;
-	i = 0;
-
-//	while(i < 1)
-//		ft_print_player(client->response.players_data[i++]);
-
-//	printf("nb_colors %d\n", int_32_data[1]); // nb_colors
-//	printf("nb_events %d\n", int_32_data[2]); // nb_events
-//	printf("nb_players %d\n", int_32_data[3]); // nb_players
+	printf("nb_moves %d\n", int_32_data[1]); // nb_moves
+	printf("nb_events %d\n", int_32_data[2]); // nb_events
+	printf("nb_players %d\n", int_32_data[3]); // nb_players
 	client->last_message_number = int_32_data[0];
+}
+
+
+void	ft_print_move(t_move move)
+{
+	printf("index: %d\n", move.player_index);
+	printf("angle: %f\n", move.angle);
+	printf("radius: %f\n", move.radius);
+	ft_print_vec2(move.from);
+	ft_print_vec2(move.to);
+}
+
+void	ft_update_board(t_client *client, t_vec2 iter, t_move move)
+{
+	double radius = move.radius;
+	int i;
+	int j;
+
+	i = iter.y - radius;
+	while (i < iter.y + radius)
+	{
+		j  = (int)iter.x;
+		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
+		{
+			client->board.map[i][j] = move.player_index + 1;
+			j--;
+		}
+		j  = (int)iter.x + 1;
+		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
+		{
+			client->board.map[i][j] = move.player_index + 1;
+			j++;
+		}
+		i++;
+	}
+}
+
+void	ft_process_move(t_client *client, t_move move)
+{
+	t_vec2 iter = move.from;
+	t_vec2 to = move.to;
+
+	while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
+	{
+		iter = ft_vec2_dest(iter, move.angle, ft_fmin(1, SPEED));
+		ft_update_board(client, iter, move);
+	}
 }
 
 void	ft_process_data_board(t_client *client)
 {
 	int i;
-	t_colored colored;
+	t_move move;
 	i = 0;
 
-	while (i < client->response.nb_colored)
+	while (i < client->response.nb_moves)
 	{
-		colored = client->response.colored_data[i];
-		client->board.map[colored.pos.y][colored.pos.x] = colored.player_index + 1;
+		move = client->response.move_data[i];
+		ft_process_move(client, move);
 		i++;
 	}
 }
@@ -326,7 +363,7 @@ void	ft_check_for_data_back(t_client *client)
 void	ft_process_keys(t_client *client)
 {
 	SDL_Event event;
-	
+
 	//ft_bzero(client->to_send.message->keys, NB_KEYS);
 	while (SDL_PollEvent(&event))
 	{
@@ -343,7 +380,7 @@ void	ft_process_keys(t_client *client)
 			ft_process_mouseup(client, event.key.keysym.sym);
 	}
 	ft_process_keyboard(client, SDL_GetKeyboardState(NULL));
-//	ft_process_mouse(client, SDL_GetMouseState(NULL, NULL));
+	//	ft_process_mouse(client, SDL_GetMouseState(NULL, NULL));
 }
 
 void	ft_process_client(char *serverName, char *port)
@@ -367,7 +404,7 @@ void	ft_process_client(char *serverName, char *port)
 		ft_print_fps(&(client.framerate));
 		ft_process_delta(&(client.framerate));
 		SDL_Delay(ft_fmax(0, (1000 / TICKRATE) - (client.framerate.delta)));
-	//	SDL_Delay((1000 / TICKRATE));
+		//	SDL_Delay((1000 / TICKRATE));
 	}
 	ft_send_data(&client, DECONNEXION);
 }

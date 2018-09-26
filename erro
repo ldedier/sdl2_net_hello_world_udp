@@ -1,0 +1,16 @@
+srcs/server.c:252:42: error: no member named 'pos' in 'struct s_move'
+        move_stack->moves[move_stack->nb_moves].pos.x = x;
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^
+srcs/server.c:253:42: error: no member named 'pos' in 'struct s_move'
+        move_stack->moves[move_stack->nb_moves].pos.y = y;
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ^
+srcs/server.c:311:7: error: implicit declaration of function 'ft_stack_changes' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
+                                                ft_stack_changes(server, &(server->cm[i].changes.colored_stack), iter, message->player_index);
+                                                ^
+srcs/server.c:311:56: error: no member named 'colored_stack' in 'struct s_changes'
+                                                ft_stack_changes(server, &(server->cm[i].changes.colored_stack), iter, message->player_index);
+                                                                           ~~~~~~~~~~~~~~~~~~~~~ ^
+4 errors generated.
+make[2]: *** [objs/server.o] Error 1
+make[1]: *** [all] Error 2
+make: *** [macbook] Error 2

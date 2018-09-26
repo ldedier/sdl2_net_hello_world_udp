@@ -16,7 +16,8 @@
 # define BOARD_WIDTH		1280
 # define BOARD_HEIGHT		720
 # define SPEED				1
-# define MAX_COLORED		100
+# define MAX_MOVES			100
+# define MAX_COLORED		100000
 # define MAX_FLAGS			15
 # define DEFAULT_MOBILITY	M_PI / 64
 # define MARGIN 0
@@ -46,6 +47,7 @@ typedef struct          s_player
 	t_vec2				pos;
 	int					color;	
 	int					dead;
+	char				index;
 	t_curve				curve;
 	double				speed;
 	double				angle;
@@ -66,7 +68,20 @@ typedef union			u_color
 	int					color;
 	t_argb				argb;
 }						t_color;
-		
+
+typedef struct			s_move
+{
+	t_vec2				from;
+	t_vec2				to;
+	double				speed;
+	double				angle;
+	double				radius;
+	//double			invis...
+	char				player_index;
+}						t_move;
+
+
+
 typedef struct			s_colored
 {
 	t_ivec2				pos;
@@ -79,6 +94,12 @@ typedef struct			s_colored_stack
 	int					nb_colored;
 }						t_colored_stack;
 
+typedef struct			s_move_stack
+{
+	t_move				moves[MAX_MOVES];
+	int					nb_moves;
+}						t_move_stack;
+
 typedef struct			s_event_stack
 {
 	char				events[MAX_FLAGS];
@@ -87,15 +108,9 @@ typedef struct			s_event_stack
 
 typedef struct			s_changes
 {
-	t_colored_stack		colored_stack;
+	t_move_stack		move_stack;
 	t_event_stack		event_stack;
 }						t_changes;
-
-typedef struct			s_server_changes
-{
-	t_colored			colored[MAX_COLORED];
-	int					nb_colored;
-}						t_server_changes;
 
 typedef struct			s_board
 {
@@ -106,16 +121,16 @@ typedef struct			s_board
 
 typedef struct			s_client_response
 {
-	t_colored			*colored_data;
+	t_move				*move_data;
 	char				*events_data;
 	t_player			*players_data;
 	int					nb_players;
-	int					nb_colored;
+	int					nb_moves;
 	int					nb_events;
 }						t_client_response;
 
 void					ft_init_board(t_board *board);
-void					ft_print_colored(t_colored color);
 void					ft_print_vec2(t_vec2 vec2);
 void					ft_print_ivec2(t_ivec2 vec2);
+t_vec2					ft_vec2_dest(t_vec2 pos, double angle, float speed);
 #endif
