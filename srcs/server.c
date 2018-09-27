@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/23 00:38:00 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/27 16:14:08 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,8 @@ void	ft_init_player(t_player *player, int index)
 	}
 	player->dead = 1;
 	player->angle = 0;
-	player->radius = 100;
+	player->speed = SPEED;
+	player->radius = 5;
 }
 
 void	ft_init_game(t_game *game)
@@ -144,12 +145,12 @@ t_vec2	ft_vec2_dest(t_vec2 pos, double angle, float speed)
 	return (res);
 }
 
-void	ft_update_angle(char keys[NB_KEYS], double *angle)
+void	ft_update_angle(char keys[NB_KEYS], t_player *player)
 {
 	if (keys[KEY_LEFT])
-		*angle -= DEFAULT_MOBILITY;
+		player->angle -= (DEFAULT_MOBILITY / sqrt(player->radius)) * sqrt(player->speed);
 	else if (keys[KEY_RIGHT])
-		*angle += DEFAULT_MOBILITY;
+		player->angle += (DEFAULT_MOBILITY / sqrt(player->radius)) * sqrt(player->speed);
 }
 
 
@@ -195,8 +196,7 @@ int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, double radius)
 		(int)vec.x, (int)vec.y, vec.x, vec.y);
 	}
 	*/
-//	printf("is_in_sphere(): %d\n", ft_is_in_sphere(radius, from, vec));
-//	printf("ft_collide_board_sphere(): %d\n", ft_collide_board_sphere(board, radius, vec, from));
+	printf("ft_collide_board_sphere(): %d\n", ft_collide_board_sphere(board, radius, vec, from));
 	return (vec.x >= 0 && vec.x < board.current_dim.x
 				&& vec.y >= 0 && vec.y < board.current_dim.y
 					&& !ft_collide_board_sphere(board, radius, vec, from));
@@ -213,7 +213,7 @@ void	ft_print_ivec2(t_ivec2 vec)
 }
 
 
-void	ft_apply_changes(t_server *server)
+void	ft_apply_color_changes(t_server *server)
 {
 	int i;
 	t_colored colored;
@@ -229,20 +229,6 @@ void	ft_apply_changes(t_server *server)
 	server->colored_stack.nb_colored = 0;
 }
 
-int		is_already_in_color_stack(t_colored_stack colored_stack, int x, int y)
-{
-	int i;
-
-	i = 0;
-	while (i < colored_stack.nb_colored)
-	{
-		if (colored_stack.colored[i].pos.x == x && colored_stack.colored[i].pos.y == y)
-			return (1);
-		i++;
-	}
-	return (0);
-}
-
 void	ft_add_color_to_stack(t_colored_stack *colored_stack, int x, int y, char player_index)
 {
 	if (colored_stack->nb_colored >= MAX_COLORED)
@@ -250,13 +236,10 @@ void	ft_add_color_to_stack(t_colored_stack *colored_stack, int x, int y, char pl
 		printf("too much color changes\n");
 		exit(1);
 	}
-///	if (!is_already_in_color_stack(*colored_stack, x, y))
-//	{
-		colored_stack->colored[colored_stack->nb_colored].pos.x = x;
-		colored_stack->colored[colored_stack->nb_colored].pos.y = y;
-		colored_stack->colored[colored_stack->nb_colored].player_index = player_index;
-		colored_stack->nb_colored++;
-//	}
+	colored_stack->colored[colored_stack->nb_colored].pos.x = x;
+	colored_stack->colored[colored_stack->nb_colored].pos.y = y;
+	colored_stack->colored[colored_stack->nb_colored].player_index = player_index;
+	colored_stack->nb_colored++;
 }
 
 void	ft_stack_changes_color(t_server *server, t_colored_stack *colored_stack, t_vec2 iter, char player_index)
@@ -313,7 +296,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 
 	if (!server->game.players[message->player_index].dead)
 	{
-		ft_update_angle(message->keys, &(server->game.players[message->player_index].angle));
+		ft_update_angle(message->keys, &(server->game.players[message->player_index]));
 		from = server->game.players[message->player_index].pos;
 		to = ft_vec2_dest(from, server->game.players[message->player_index].angle, SPEED);
 		res = to;
@@ -341,7 +324,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 			i++;
 		}
 		server->game.players[message->player_index].pos = res;
-		ft_apply_changes(server);
+		ft_apply_color_changes(server);
 	}
 }
 
