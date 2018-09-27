@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/08/23 00:38:00 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/13 20:22:11 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ void	ft_init_player(t_player *player, int index)
 		player->pos.y = (2 * BOARD_HEIGHT) / 3;
 		player->dir.x = -1;
 		player->dir.y = 0;
-		player->color = 0x0000ff;
+		player->color = 0x00ffff;
 	}
 	player->dead = 1;
 	player->angle = 0;

@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/09/03 20:41:12 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/13 20:10:15 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/13 20:26:16 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 # define BOARD_WIDTH	2560
 # define BOARD_HEIGHT	1440
-# define SPEED	1
+# define SPEED	12
 # define MAX_COLORED	100
 # define MAX_FLAGS 15
 
