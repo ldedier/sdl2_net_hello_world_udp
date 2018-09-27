@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/09/03 20:41:12 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/27 16:14:12 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/27 20:09:48 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,17 @@
 
 # define BOARD_WIDTH		1280
 # define BOARD_HEIGHT		720
-# define SPEED				10
 # define MAX_MOVES			10
 # define MAX_COLORED		100000
 # define MAX_FLAGS			15
 # define DEFAULT_MOBILITY	M_PI / 32
 # define MARGIN				0
 # define EPSILON			0.1
+
+# define INIT_SPEED			1
+# define SPEED				1
+# define INIT_RADIUS		1
+# define RADIUS				5
 
 typedef struct          s_vec2
 {

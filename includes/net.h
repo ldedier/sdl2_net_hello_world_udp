@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/07/30 19:45:00 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/27 16:14:14 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/27 16:31:23 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@
 # define MAX_UDP_PACKET_SIZE 64
 
 # define CONNECTION_RETRIES_LIMIT 5
-# define TIMEOUT_THRESHOLD 5000
+# define TIMEOUT_THRESHOLD 500
 # define TICKRATE 60
 
 typedef enum			e_keys_enum

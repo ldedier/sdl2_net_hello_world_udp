@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/27 16:14:08 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/27 20:06:09 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,9 +48,8 @@ void	ft_init_player(t_player *player, int index)
 		player->color = 0x0000ff;
 	}
 	player->dead = 1;
-	player->angle = 0;
 	player->speed = SPEED;
-	player->radius = 5;
+	player->radius = RADIUS;
 }
 
 void	ft_init_game(t_game *game)
@@ -148,9 +147,9 @@ t_vec2	ft_vec2_dest(t_vec2 pos, double angle, float speed)
 void	ft_update_angle(char keys[NB_KEYS], t_player *player)
 {
 	if (keys[KEY_LEFT])
-		player->angle -= (DEFAULT_MOBILITY / sqrt(player->radius)) * sqrt(player->speed);
+		player->angle -= (DEFAULT_MOBILITY / sqrt(player->radius / INIT_RADIUS)) * sqrt(player->speed / INIT_SPEED);
 	else if (keys[KEY_RIGHT])
-		player->angle += (DEFAULT_MOBILITY / sqrt(player->radius)) * sqrt(player->speed);
+		player->angle += (DEFAULT_MOBILITY / sqrt(player->radius / INIT_RADIUS)) * sqrt(player->speed / INIT_SPEED);
 }
 
 
@@ -159,7 +158,13 @@ int		ft_is_in_sphere(double radius, t_vec2 center, t_vec2 pos)
 	return ((pos.x - center.x) * (pos.x - center.x) + (pos.y - center.y) * (pos.y - center.y) < radius * radius);
 }
 
-int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2 except)
+int		ft_is_on_board(t_board board, int x, int y)
+{
+	return (x >= 0 && x < board.current_dim.x
+			&& y >= 0 && y < board.current_dim.y);
+}
+
+int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2 except, int lol)
 {
 	int i;
 	int j;
@@ -168,17 +173,31 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 	while (i < center.y + radius)
 	{
 		j  = (int)center.x;
-		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius - MARGIN)
+		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius)
 		{
-			if (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)))
+			if (!ft_is_on_board(board, j, i) || (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
+			{
+				printf("cogne dans le mur 1:%d\n", !ft_is_on_board(board, j, i));
+				printf("rempli 1 :%d\n", board.map[i][j]);
+				printf("pas dans la sphere1 :%d\n", !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)));
+				printf("intersect 1:%d\n", (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))));
+				printf("lol 1:%d\n",lol); 
 				return (1);
+			}
 			j--;
 		}
 		j  = (int)center.x + 1;
-		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius - MARGIN)
+		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius)
 		{
-			if (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)))
+			if (!ft_is_on_board(board, j, i) || (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
+			{
+				printf("cogne dans le mur 1:%d\n", !ft_is_on_board(board, j, i));
+				printf("rempli 1 :%d\n", board.map[i][j]);
+				printf("pas dans la sphere1 :%d\n", !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)));
+				printf("intersect 1:%d\n", (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))));
+				printf("lol 1:%d\n",lol); 
 				return (1);
+			}
 			j++;
 		}
 		i++;
@@ -187,7 +206,7 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 }
 
 
-int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, double radius)
+int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, double radius, int lol)
 {
 	/*
 	if (board.map[(int)vec.y][(int)vec.x])
@@ -196,10 +215,10 @@ int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, double radius)
 		(int)vec.x, (int)vec.y, vec.x, vec.y);
 	}
 	*/
-	printf("ft_collide_board_sphere(): %d\n", ft_collide_board_sphere(board, radius, vec, from));
+	printf("ft_collide_board_sphere(): %d\n", ft_collide_board_sphere(board, radius, vec, from, lol));
 	return (vec.x >= 0 && vec.x < board.current_dim.x
 				&& vec.y >= 0 && vec.y < board.current_dim.y
-					&& !ft_collide_board_sphere(board, radius, vec, from));
+					&& !ft_collide_board_sphere(board, radius, vec, from, lol));
 }
 
 void	ft_print_vec2(t_vec2 vec)
@@ -271,7 +290,7 @@ void	ft_stack_changes_color(t_server *server, t_colored_stack *colored_stack, t_
 
 void	ft_stack_changes_move(t_player player, t_move_stack *move_stack, t_vec2 from, t_vec2 to)
 {
-	if (move_stack->nb_moves > MAX_MOVES)
+	if (move_stack->nb_moves == MAX_MOVES)
 	{
 		printf("too much moves\n");
 		exit(1);
@@ -294,17 +313,19 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 	t_vec2 res;
 	int i;
 
+	int lol;
+	lol = 0;
 	if (!server->game.players[message->player_index].dead)
 	{
 		ft_update_angle(message->keys, &(server->game.players[message->player_index]));
 		from = server->game.players[message->player_index].pos;
-		to = ft_vec2_dest(from, server->game.players[message->player_index].angle, SPEED);
+		to = ft_vec2_dest(from, server->game.players[message->player_index].angle, server->game.players[message->player_index].speed);
 		res = to;
 		iter = from;
 		while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
 		{
 			iter = ft_vec2_dest(iter, server->game.players[message->player_index].angle, ft_fmin(1, SPEED));
-			if (ft_iz_okay(server->board, iter, from, server->game.players[message->player_index].radius))
+			if (ft_iz_okay(server->board, iter, from, server->game.players[message->player_index].radius, lol++))
 			{
 				ft_stack_changes_color(server, &(server->colored_stack), iter, message->player_index);
 			}
@@ -320,7 +341,7 @@ void	ft_process_engine(t_server *server, t_client_message *message)
 		while (i < MAX_CLIENTS)
 		{
 			if (!server->cm[i].isfree)
-				ft_stack_changes_move(server->game.players[message->player_index], &(server->cm[i].changes.move_stack), from, iter);
+				ft_stack_changes_move(server->game.players[message->player_index], &(server->cm[i].changes.move_stack), from, res);
 			i++;
 		}
 		server->game.players[message->player_index].pos = res;

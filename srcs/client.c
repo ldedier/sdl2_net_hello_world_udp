@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/27 16:14:09 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/27 16:38:15 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -287,17 +287,17 @@ void	ft_update_board(t_client *client, t_vec2 iter, t_move move)
 	int i;
 	int j;
 
-	i = iter.y - radius;
-	while (i < iter.y + radius)
+	i = ft_max(0, iter.y - radius);
+	while (i < ft_min(client->board.current_dim.y, iter.y + radius))
 	{
 		j  = (int)iter.x;
-		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
+		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius && j >= 0)
 		{
 			client->board.map[i][j] = move.player_index + 1;
 			j--;
 		}
 		j  = (int)iter.x + 1;
-		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
+		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius && j < client->board.current_dim.x)
 		{
 			client->board.map[i][j] = move.player_index + 1;
 			j++;
