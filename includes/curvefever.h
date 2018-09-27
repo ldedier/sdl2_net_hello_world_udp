@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/09/03 20:41:12 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/27 20:09:48 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/28 01:07:35 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,17 +15,19 @@
 
 # define BOARD_WIDTH		1280
 # define BOARD_HEIGHT		720
-# define MAX_MOVES			10
-# define MAX_COLORED		100000
+# define MAX_MOVES			50
+# define MAX_COLORED		10000
 # define MAX_FLAGS			15
-# define DEFAULT_MOBILITY	M_PI / 32
+# define DEFAULT_MOBILITY	M_PI / 128
 # define MARGIN				0
 # define EPSILON			0.1
 
+# define MOBILITY			10
 # define INIT_SPEED			1
 # define SPEED				1
 # define INIT_RADIUS		1
-# define RADIUS				5
+# define RADIUS				10
+
 
 typedef struct          s_vec2
 {
@@ -57,6 +59,7 @@ typedef struct          s_player
 	double				speed;
 	double				angle;
 	double				radius;
+	double				mobility;
 //	int					score;
 }						t_player;
 
@@ -74,18 +77,37 @@ typedef union			u_color
 	t_argb				argb;
 }						t_color;
 
-typedef struct			s_move
+typedef struct			s_forward_move
 {
 	t_vec2				from;
 	t_vec2				to;
 	double				speed;
-	double				angle;
-	double				radius;
 	//double			invis...
+}						t_forward_move;
+
+typedef struct			s_rotate_move
+{
+	t_vec2				center;
+	double				angle;
+	double				mobility;
+	char				dir;
+}						t_rotate_move;
+
+typedef union			u_move_union
+{
+	t_forward_move		fmove;
+	t_rotate_move		rmove;
+}						t_move_union;
+
+typedef struct			s_move
+{
+	char				is_rotate;
+	t_move_union		move_union;
+	double				radius;
+	double				speed;
+	double				player_angle;
 	char				player_index;
 }						t_move;
-
-
 
 typedef struct			s_colored
 {
@@ -137,5 +159,5 @@ typedef struct			s_client_response
 void					ft_init_board(t_board *board);
 void					ft_print_vec2(t_vec2 vec2);
 void					ft_print_ivec2(t_ivec2 vec2);
-t_vec2					ft_vec2_dest(t_vec2 pos, double angle, float speed);
+t_vec2					ft_vec2_dest(t_vec2 pos, double angle, double speed);
 #endif

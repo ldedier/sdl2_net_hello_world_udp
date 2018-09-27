@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/27 20:06:09 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/28 01:03:35 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,7 @@ void	ft_init_player(t_player *player, int index)
 	player->dead = 1;
 	player->speed = SPEED;
 	player->radius = RADIUS;
+	player->mobility = MOBILITY;
 }
 
 void	ft_init_game(t_game *game)
@@ -117,7 +118,7 @@ t_vec2	ft_new_vec2(double x, double y)
 	return (res);
 }
 
-t_vec2	ft_vec2_scalar(t_vec2 vec, float scalar)
+t_vec2	ft_vec2_scalar(t_vec2 vec, double scalar)
 {
 	t_vec2 res;
 
@@ -135,7 +136,7 @@ t_vec2	ft_vec2_add(t_vec2 vec1, t_vec2 vec2)
 	return res;
 }
 
-t_vec2	ft_vec2_dest(t_vec2 pos, double angle, float speed)
+t_vec2	ft_vec2_dest(t_vec2 pos, double angle, double speed)
 {
 	t_vec2 res;
 
@@ -177,11 +178,11 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 		{
 			if (!ft_is_on_board(board, j, i) || (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
 			{
-				printf("cogne dans le mur 1:%d\n", !ft_is_on_board(board, j, i));
-				printf("rempli 1 :%d\n", board.map[i][j]);
-				printf("pas dans la sphere1 :%d\n", !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)));
-				printf("intersect 1:%d\n", (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))));
-				printf("lol 1:%d\n",lol); 
+//				printf("cogne dans le mur 1:%d\n", !ft_is_on_board(board, j, i));
+//				printf("rempli 1 :%d\n", board.map[i][j]);
+//				printf("pas dans la sphere1 :%d\n", !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)));
+//				printf("intersect 1:%d\n", (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))));
+//				printf("lol 1:%d\n",lol); 
 				return (1);
 			}
 			j--;
@@ -191,11 +192,11 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 		{
 			if (!ft_is_on_board(board, j, i) || (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
 			{
-				printf("cogne dans le mur 1:%d\n", !ft_is_on_board(board, j, i));
-				printf("rempli 1 :%d\n", board.map[i][j]);
-				printf("pas dans la sphere1 :%d\n", !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)));
-				printf("intersect 1:%d\n", (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))));
-				printf("lol 1:%d\n",lol); 
+//				printf("cogne dans le mur 1:%d\n", !ft_is_on_board(board, j, i));
+//				printf("rempli 1 :%d\n", board.map[i][j]);
+//				printf("pas dans la sphere1 :%d\n", !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)));
+//				printf("intersect 1:%d\n", (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))));
+//				printf("lol 1:%d\n",lol); 
 				return (1);
 			}
 			j++;
@@ -288,64 +289,148 @@ void	ft_stack_changes_color(t_server *server, t_colored_stack *colored_stack, t_
 	}
 }
 
-void	ft_stack_changes_move(t_player player, t_move_stack *move_stack, t_vec2 from, t_vec2 to)
+void	ft_fill_move(t_move *move, t_player player, char is_rotate)
 {
+	move->player_index = player.index;
+	move->player_angle = player.angle;
+	move->speed = player.speed;
+	move->radius = player.radius;
+	move->is_rotate = is_rotate;
+}
+
+void	ft_stack_move_rotate(t_player player, t_move_stack *move_stack, t_vec2 center, double angle, char dir)
+{
+	t_rotate_move *rmove;
+
 	if (move_stack->nb_moves == MAX_MOVES)
 	{
 		printf("too much moves\n");
 		exit(1);
 	}
-	move_stack->moves[move_stack->nb_moves].from = from;
-	move_stack->moves[move_stack->nb_moves].to = to;
-	move_stack->moves[move_stack->nb_moves].player_index = player.index;
-	move_stack->moves[move_stack->nb_moves].angle = player.angle;
-	move_stack->moves[move_stack->nb_moves].speed = player.speed;
-	move_stack->moves[move_stack->nb_moves].radius = player.radius;
+	ft_fill_move(&(move_stack->moves[move_stack->nb_moves]), player, 1);
+	rmove = &(move_stack->moves[move_stack->nb_moves].move_union.rmove);
+	rmove->center = center;
+	rmove->angle = angle;
+	rmove->dir = dir;
+	rmove->mobility = player.mobility;
 	move_stack->nb_moves++;
 }
 
-void	ft_process_engine(t_server *server, t_client_message *message)
+
+void	ft_stack_move_forward(t_player player, t_move_stack *move_stack, t_vec2 from, t_vec2 to)
+{
+	t_forward_move *fmove;
+
+	if (move_stack->nb_moves == MAX_MOVES)
+	{
+		printf("too much moves\n");
+		exit(1);
+	}
+	ft_fill_move(&(move_stack->moves[move_stack->nb_moves]), player, 0);
+	fmove = &(move_stack->moves[move_stack->nb_moves].move_union.fmove);
+	fmove->from = from;
+	fmove->to = to;
+	move_stack->nb_moves++;
+}
+
+t_vec2	ft_get_rotation_center(t_player *player, int dir)
+{
+	return ft_vec2_dest(player->pos, player->angle + dir * (M_PI / 2), player->radius + player->mobility);
+}
+
+void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 {
 	t_vec2 to;
 	t_vec2 from;
 	t_vec2 iter;
-
 	t_vec2 res;
 	int i;
-
 	int lol;
+	t_vec2 center;
+	
+	center = ft_get_rotation_center(player, dir);
+	from = player->pos;
+	iter = from;
+	double angle_to = player->speed / (player->radius + player->mobility);
+	double angle_iter = 0;	
+	double counter_angle = player->angle + dir * (M_PI / 2) + M_PI;
+	
+	while (angle_iter < angle_to)
+	{
+		iter = ft_vec2_dest(center, counter_angle + (angle_iter * dir), player->radius + player->mobility);
+		if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
+			ft_stack_changes_color(server, &(server->colored_stack), iter, player->index);
+		else
+		{
+			player->dead = 1;
+			res = iter;
+			printf("dead\n");
+			break;
+		}
+		angle_iter += M_PI / 256;
+	}
+	res = iter;
+	i = 0;
+	while (i < MAX_CLIENTS)
+	{
+		if (!server->cm[i].isfree)
+			ft_stack_move_rotate(*player, &(server->cm[i].changes.move_stack), center, angle_iter, dir);
+		i++;
+	}
+	player->pos = res;
+	player->angle += angle_to * dir;
+	ft_apply_color_changes(server);
+}
+
+void	ft_process_engine_forward(t_server *server, t_player *player)
+{
+	t_vec2 to;
+	t_vec2 from;
+	t_vec2 iter;
+	t_vec2 res;
+	int i;
+	int lol;
+
 	lol = 0;
+	from = player->pos;
+	to = ft_vec2_dest(from, player->angle, player->speed);
+	res = to;
+	iter = from;
+	while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
+	{
+		iter = ft_vec2_dest(iter, player->angle, ft_fmin(1, SPEED));
+		if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
+			ft_stack_changes_color(server, &(server->colored_stack), iter, player->index);
+		else
+		{
+			player->dead = 1;
+			res = iter;
+			printf("dead\n");
+			break;
+		}
+	}
+	i = 0;
+	while (i < MAX_CLIENTS)
+	{
+		if (!server->cm[i].isfree)
+			ft_stack_move_forward(*player, &(server->cm[i].changes.move_stack), from, res);
+		i++;
+	}
+	player->pos = res;
+	ft_apply_color_changes(server);
+}
+
+void	ft_process_engine(t_server *server, t_client_message *message)
+{
 	if (!server->game.players[message->player_index].dead)
 	{
-		ft_update_angle(message->keys, &(server->game.players[message->player_index]));
-		from = server->game.players[message->player_index].pos;
-		to = ft_vec2_dest(from, server->game.players[message->player_index].angle, server->game.players[message->player_index].speed);
-		res = to;
-		iter = from;
-		while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
-		{
-			iter = ft_vec2_dest(iter, server->game.players[message->player_index].angle, ft_fmin(1, SPEED));
-			if (ft_iz_okay(server->board, iter, from, server->game.players[message->player_index].radius, lol++))
-			{
-				ft_stack_changes_color(server, &(server->colored_stack), iter, message->player_index);
-			}
-			else
-			{
-				server->game.players[message->player_index].dead = 1;
-				res = iter;
-				printf("dead\n");
-				break;
-			}
-		}
-		i = 0;
-		while (i < MAX_CLIENTS)
-		{
-			if (!server->cm[i].isfree)
-				ft_stack_changes_move(server->game.players[message->player_index], &(server->cm[i].changes.move_stack), from, res);
-			i++;
-		}
-		server->game.players[message->player_index].pos = res;
-		ft_apply_color_changes(server);
+		//	ft_update_angle(message->keys, &(server->game.players[message->player_index]));
+		if (message->keys[KEY_LEFT])
+			ft_process_engine_rotate(server, &(server->game.players[message->player_index]), -1);
+		else if (message->keys[KEY_RIGHT])
+			ft_process_engine_rotate(server, &(server->game.players[message->player_index]), 1);
+		else
+			ft_process_engine_forward(server, &(server->game.players[message->player_index]));
 	}
 }
 
