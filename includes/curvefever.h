@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/09/03 20:41:12 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/28 01:07:35 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/28 10:11:34 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,7 @@
 
 # define BOARD_WIDTH		1280
 # define BOARD_HEIGHT		720
-# define MAX_MOVES			50
-# define MAX_COLORED		10000
+# define MAX_MOVES			20
 # define MAX_FLAGS			15
 # define DEFAULT_MOBILITY	M_PI / 128
 # define MARGIN				0
@@ -26,8 +25,7 @@
 # define INIT_SPEED			1
 # define SPEED				1
 # define INIT_RADIUS		1
-# define RADIUS				10
-
+# define RADIUS				5
 
 typedef struct          s_vec2
 {
@@ -109,18 +107,6 @@ typedef struct			s_move
 	char				player_index;
 }						t_move;
 
-typedef struct			s_colored
-{
-	t_ivec2				pos;
-	char				player_index;
-}						t_colored;
-
-typedef struct			s_colored_stack
-{
-	t_colored			colored[MAX_COLORED];
-	int					nb_colored;
-}						t_colored_stack;
-
 typedef struct			s_move_stack
 {
 	t_move				moves[MAX_MOVES];
@@ -139,9 +125,15 @@ typedef struct			s_changes
 	t_event_stack		event_stack;
 }						t_changes;
 
+typedef struct			s_tile
+{
+	char				player_index : 7;
+	char				parsed : 1;
+}						t_tile;
+
 typedef struct			s_board
 {
-	char				map[BOARD_HEIGHT][BOARD_WIDTH];
+	t_tile				**map;
 	t_ivec2				current_dim;
 	t_ivec2				init_dim;
 }						t_board;
@@ -157,6 +149,7 @@ typedef struct			s_client_response
 }						t_client_response;
 
 void					ft_init_board(t_board *board);
+void					ft_clear_board(t_board *board);
 void					ft_print_vec2(t_vec2 vec2);
 void					ft_print_ivec2(t_ivec2 vec2);
 t_vec2					ft_vec2_dest(t_vec2 pos, double angle, double speed);

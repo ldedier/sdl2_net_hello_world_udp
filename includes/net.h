@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/07/30 19:45:00 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/27 16:31:23 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/28 09:44:45 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ typedef enum			e_keys_enum
 
 typedef struct			s_game
 {
-	t_player			players[MAX_CLIENTS];
+	t_player			players[MAX_CLIENTS + 1];
 }						t_game;
 
 typedef struct			s_client_manager
@@ -116,8 +116,7 @@ typedef struct			s_server
 	t_client_bundle		received;
 	t_server_bundle		to_send;
 	UDPsocket			socket;
-	t_client_manager	cm[MAX_CLIENTS];
-	t_colored_stack		colored_stack;
+	t_client_manager	cm[MAX_CLIENTS + 1];
 	int					on;
 	SDLNet_SocketSet	socket_set;
 	int					nb_clients;

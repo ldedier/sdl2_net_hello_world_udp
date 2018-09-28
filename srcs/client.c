@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/28 01:04:15 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/28 10:10:30 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,7 +214,7 @@ void	ft_render_board(t_client *client)
 		j = 0;
 		while (j < BOARD_WIDTH)
 		{
-			if ((index = client->board.map[i][j]))
+			if ((index = client->board.map[i][j].player_index))
 			{
 				pixels[i * surface_width + j] = client->response.players_data[index - 1].color;
 			}
@@ -294,13 +294,13 @@ void	ft_update_board(t_client *client, t_vec2 iter, t_move move)
 		j  = (int)iter.x;
 		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius && j >= 0)
 		{
-			client->board.map[i][j] = move.player_index + 1;
+			client->board.map[i][j].player_index = move.player_index;
 			j--;
 		}
 		j  = (int)iter.x + 1;
 		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius && j < client->board.current_dim.x)
 		{
-			client->board.map[i][j] = move.player_index + 1;
+			client->board.map[i][j].player_index = move.player_index;
 			j++;
 		}
 		i++;
@@ -323,7 +323,7 @@ void	ft_process_move_rotate(t_client *client, t_move move)
 		ft_update_board(client, iter, move);
 		angle_iter += M_PI / 256;
 	}
-	//client->board.map[(int)rmove.center.y][(int)rmove.center.x] = move.player_index + 1;
+	client->board.map[(int)rmove.center.y][(int)rmove.center.x].player_index = move.player_index;
 }
 
 void	ft_process_move_forward(t_client *client, t_move move)
@@ -421,7 +421,7 @@ void	ft_process_client(char *serverName, char *port)
 		exit(1);
 	else
 		ft_printf("successfully connected to server as player number #%d\n",
-				client.received.message->player_index + 1);
+				client.received.message->player_index);
 	client.framerate.ms_counter = SDL_GetTicks();
 	while (client.on)
 	{

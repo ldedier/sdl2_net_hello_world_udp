@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/28 01:03:35 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/28 10:07:47 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,12 @@ void	ft_reset_changes(t_changes *changes)
 	changes->move_stack.nb_moves = 0;
 }
 
-void	ft_init_clients(t_client_manager cm[MAX_CLIENTS])
+void	ft_init_clients(t_client_manager cm[MAX_CLIENTS + 1])
 {
 	int i;
 
 	i = 0;
-	while (i < MAX_CLIENTS)
+	while (i < MAX_CLIENTS + 1)
 	{
 		cm[i].isfree = 1;
 		ft_reset_changes(&(cm[i].changes));
@@ -33,7 +33,7 @@ void	ft_init_clients(t_client_manager cm[MAX_CLIENTS])
 
 void	ft_init_player(t_player *player, int index)
 {
-	if (index == 0)
+	if (index == 1)
 	{
 		player->pos.x = BOARD_WIDTH / 3;
 		player->pos.y = BOARD_HEIGHT / 3;
@@ -58,7 +58,7 @@ void	ft_init_game(t_game *game)
 	int i;
 
 	i = 0;
-	while (i < MAX_CLIENTS)
+	while (i < MAX_CLIENTS + 1)
 	{
 		ft_init_player(&(game->players[i]), i);
 		i++;
@@ -83,7 +83,6 @@ int ft_init_server(t_server *server, int port)
 	ft_init_board(&(server->board));	
 	server->framerate.previous = SDL_GetPerformanceCounter();
 	server->nb_clients = 0;
-	server->colored_stack.nb_colored = 0;
 	return (1);
 }
 
@@ -91,8 +90,8 @@ int		ft_get_client_index(t_server *server)
 {
 	int i;
 
-	i = 0;
-	while (i < MAX_CLIENTS)
+	i = 1;
+	while (i < MAX_CLIENTS + 1)
 	{
 		if (server->cm[i].isfree)
 		{
@@ -176,7 +175,7 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 		j  = (int)center.x;
 		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius)
 		{
-			if (!ft_is_on_board(board, j, i) || (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
+			if (!ft_is_on_board(board, j, i) || (board.map[i][j].player_index && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
 			{
 //				printf("cogne dans le mur 1:%d\n", !ft_is_on_board(board, j, i));
 //				printf("rempli 1 :%d\n", board.map[i][j]);
@@ -190,7 +189,7 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 		j  = (int)center.x + 1;
 		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius)
 		{
-			if (!ft_is_on_board(board, j, i) || (board.map[i][j] && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
+			if (!ft_is_on_board(board, j, i) || (board.map[i][j].player_index && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
 			{
 //				printf("cogne dans le mur 1:%d\n", !ft_is_on_board(board, j, i));
 //				printf("rempli 1 :%d\n", board.map[i][j]);
@@ -232,37 +231,29 @@ void	ft_print_ivec2(t_ivec2 vec)
 	printf("(%d, %d)\n", vec.x, vec.y);
 }
 
-
-void	ft_apply_color_changes(t_server *server)
+void	ft_apply_color_changes(t_server *server, char player_index)
 {
 	int i;
-	t_colored colored;
+	int j;
 
 	i = 0;
-	while (i < server->colored_stack.nb_colored)
+	while (i < server->board.init_dim.y)
 	{
-		colored = server->colored_stack.colored[i];
-//		ft_print_colored(colored);
-		server->board.map[colored.pos.y][colored.pos.x] = colored.player_index + 1;
+		j = 0;
+		while (j < server->board.init_dim.x)
+		{
+			if (server->board.map[i][j].parsed)
+			{
+				server->board.map[i][j].parsed = 0;
+				server->board.map[i][j].player_index = player_index;
+			}
+			j++;
+		}
 		i++;
 	}
-	server->colored_stack.nb_colored = 0;
 }
 
-void	ft_add_color_to_stack(t_colored_stack *colored_stack, int x, int y, char player_index)
-{
-	if (colored_stack->nb_colored >= MAX_COLORED)
-	{
-		printf("too much color changes\n");
-		exit(1);
-	}
-	colored_stack->colored[colored_stack->nb_colored].pos.x = x;
-	colored_stack->colored[colored_stack->nb_colored].pos.y = y;
-	colored_stack->colored[colored_stack->nb_colored].player_index = player_index;
-	colored_stack->nb_colored++;
-}
-
-void	ft_stack_changes_color(t_server *server, t_colored_stack *colored_stack, t_vec2 iter, char player_index)
+void	ft_stack_changes_color(t_server *server, t_vec2 iter, char player_index)
 {
 	double radius;
 	int i;
@@ -276,13 +267,13 @@ void	ft_stack_changes_color(t_server *server, t_colored_stack *colored_stack, t_
 		j  = (int)iter.x;
 		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
 		{
-			ft_add_color_to_stack(colored_stack, j, i, player_index);
+			server->board.map[i][j].parsed = 1;
 			j--;
 		}
 		j  = (int)iter.x + 1;
 		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
 		{
-			ft_add_color_to_stack(colored_stack, j, i, player_index);
+			server->board.map[i][j].parsed = 1;
 			j++;
 		}
 		i++;
@@ -315,7 +306,6 @@ void	ft_stack_move_rotate(t_player player, t_move_stack *move_stack, t_vec2 cent
 	rmove->mobility = player.mobility;
 	move_stack->nb_moves++;
 }
-
 
 void	ft_stack_move_forward(t_player player, t_move_stack *move_stack, t_vec2 from, t_vec2 to)
 {
@@ -359,7 +349,7 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 	{
 		iter = ft_vec2_dest(center, counter_angle + (angle_iter * dir), player->radius + player->mobility);
 		if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-			ft_stack_changes_color(server, &(server->colored_stack), iter, player->index);
+			ft_stack_changes_color(server, iter, player->index);
 		else
 		{
 			player->dead = 1;
@@ -370,8 +360,8 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 		angle_iter += M_PI / 256;
 	}
 	res = iter;
-	i = 0;
-	while (i < MAX_CLIENTS)
+	i = 1;
+	while (i < MAX_CLIENTS + 1)
 	{
 		if (!server->cm[i].isfree)
 			ft_stack_move_rotate(*player, &(server->cm[i].changes.move_stack), center, angle_iter, dir);
@@ -379,7 +369,7 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 	}
 	player->pos = res;
 	player->angle += angle_to * dir;
-	ft_apply_color_changes(server);
+	ft_apply_color_changes(server, player->index);
 }
 
 void	ft_process_engine_forward(t_server *server, t_player *player)
@@ -400,7 +390,7 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 	{
 		iter = ft_vec2_dest(iter, player->angle, ft_fmin(1, SPEED));
 		if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-			ft_stack_changes_color(server, &(server->colored_stack), iter, player->index);
+			ft_stack_changes_color(server, iter, player->index);
 		else
 		{
 			player->dead = 1;
@@ -409,15 +399,15 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 			break;
 		}
 	}
-	i = 0;
-	while (i < MAX_CLIENTS)
+	i = 1;
+	while (i < MAX_CLIENTS + 1)
 	{
 		if (!server->cm[i].isfree)
 			ft_stack_move_forward(*player, &(server->cm[i].changes.move_stack), from, res);
 		i++;
 	}
 	player->pos = res;
-	ft_apply_color_changes(server);
+	ft_apply_color_changes(server, player->index);
 }
 
 void	ft_process_engine(t_server *server, t_client_message *message)
@@ -445,6 +435,7 @@ int		ft_get_server_packet_size(t_server *server)
 	char player_index = server->to_send.message->player_index;
 	int i;
 	int size;
+
 
 	size = 0;
 	size += sizeof(player_index);
@@ -552,8 +543,8 @@ void	ft_deconnect(t_server *server, int player_index)
 	{
 		server->cm[player_index].isfree = 1;
 		ft_init_player(&(server->game.players[player_index]), player_index);
-		if(--server->nb_clients == 0)
-			ft_init_board(&(server->board));
+		if (--server->nb_clients == 0)
+			ft_clear_board(&(server->board));
 	}
 }
 
