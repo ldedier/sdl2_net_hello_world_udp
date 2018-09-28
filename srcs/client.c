@@ -321,9 +321,12 @@ void	ft_process_move_rotate(t_client *client, t_move move)
 	{
 		iter = ft_vec2_dest(center, counter_angle + (angle_iter * rmove.dir), move.radius + rmove.mobility);
 		ft_update_board(client, iter, move);
-		angle_iter += M_PI / 256;
+		angle_iter = ft_fmin(rmove.angle, angle_iter +  M_PI / 256);
 	}
-	client->board.map[(int)rmove.center.y][(int)rmove.center.x].player_index = move.player_index;
+	iter = ft_vec2_dest(center, counter_angle + (rmove.angle * rmove.dir), move.radius + rmove.mobility);
+	ft_update_board(client, iter, move);
+	
+	//client->board.map[(int)rmove.center.y][(int)rmove.center.x].player_index = move.player_index;
 }
 
 void	ft_process_move_forward(t_client *client, t_move move)
@@ -331,12 +334,17 @@ void	ft_process_move_forward(t_client *client, t_move move)
 	t_forward_move fmove = move.move_union.fmove;
 	t_vec2 iter = fmove.from;
 	t_vec2 to = fmove.to;
+	double distance;
 
-	while ((int)iter.x != (int)to.x || (int)iter.y != (int)to.y)
+	distance = 0;
+	while (distance < move.speed)
 	{
-		iter = ft_vec2_dest(iter, move.player_angle, ft_fmin(1, SPEED));
+		iter = ft_vec2_dest(iter, move.player_angle, distance);
 		ft_update_board(client, iter, move);
+		distance = ft_fmin(move.speed, distance + 1);
 	}
+	iter = ft_vec2_dest(iter, move.player_angle, move.speed);
+	ft_update_board(client, iter, move);
 }
 
 void	ft_process_move(t_client *client, t_move move)

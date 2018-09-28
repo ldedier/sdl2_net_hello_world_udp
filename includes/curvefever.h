@@ -19,12 +19,9 @@
 # define MAX_FLAGS			15
 # define DEFAULT_MOBILITY	M_PI / 128
 # define MARGIN				0
-# define EPSILON			0.1
 
-# define MOBILITY			10
-# define INIT_SPEED			1
-# define SPEED				1
-# define INIT_RADIUS		1
+# define MOBILITY			30
+# define SPEED				1.5
 # define RADIUS				5
 
 typedef struct          s_vec2
