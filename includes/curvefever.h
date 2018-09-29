@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/09/03 20:41:12 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/28 10:11:34 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/29 21:51:48 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,9 @@
 # define MARGIN				0
 
 # define MOBILITY			30
-# define SPEED				1.5
+# define SPEED				20
 # define RADIUS				5
+# define DASH				993
 
 typedef struct          s_vec2
 {
@@ -50,11 +51,14 @@ typedef struct          s_player
 	int					color;	
 	int					dead;
 	char				index;
-	t_curve				curve;
+//	t_curve				curve;
 	double				speed;
 	double				angle;
 	double				radius;
 	double				mobility;
+	double				dash;
+	char				vulnerability;
+	double				vulnerability_countdown;
 //	int					score;
 }						t_player;
 
@@ -75,9 +79,7 @@ typedef union			u_color
 typedef struct			s_forward_move
 {
 	t_vec2				from;
-	t_vec2				to;
-	double				speed;
-	//double			invis...
+	double				distance;
 }						t_forward_move;
 
 typedef struct			s_rotate_move

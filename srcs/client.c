@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/28 10:10:30 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/29 21:31:54 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,66 +138,47 @@ int		ft_connect_to_server(t_client *client)
 	return (0);
 }
 
+void	ft_render_player(t_client *client, t_player player)
+{
+	int *pixels = (int *)client->sdl.surface->pixels;
+	int surface_width =  client->sdl.surface->w;
+
+	t_vec2 iter = player.pos;
+	double radius = player.radius;
+	int i;
+	int j;
+
+	i = ft_max(0, iter.y - radius);
+	while (i < ft_min(client->board.current_dim.y, iter.y + radius))
+	{
+		j  = (int)iter.x;
+		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius && j >= 0)
+		{
+			pixels[i * surface_width + j] = player.color;
+			j--;
+		}
+		j  = (int)iter.x + 1;
+		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius && j < client->board.current_dim.x)
+		{
+			pixels[i * surface_width + j] = player.color;
+			j++;
+		}
+		i++;
+	}
+
+}
+
 void	ft_render_players(t_client *client)
 {
 	t_game  game;
 	int i;
-	SDL_Rect rect;
-	SDL_Point center;
-
-	rect.w = 300;
-	rect.h = 150;
-
 	i = 0;
-
-	while (i < MAX_CLIENTS)
+	while (i < client->response.nb_players)
 	{
-		if (!(game.players[i].dead))
-		{
-			rect.x = game.players[i].pos.x;
-			rect.y = game.players[i].pos.y;
-
-			center.x = rect.w / 2;
-			center.y = rect.h / 2;
-
-			if (i % 2)
-				SDL_SetRenderDrawColor(client->sdl.renderer, 0, 0, 255, 255);
-			else
-				SDL_SetRenderDrawColor(client->sdl.renderer, 255, 0, 0, 255);
-			SDL_RenderCopyEx(client->sdl.renderer, client->sdl.textures[0], NULL, &rect, game.players[i].angle * (180.0 / M_PI), &center, SDL_FLIP_NONE);
-			//	SDL_RenderFillRect(client->sdl.renderer, &rect);
-		}
+		ft_render_player(client, client->response.players_data[i]);
 		i++;
 	}
 }
-
-/*
-   void	ft_render_board(t_client *client)
-   {
-   int i;
-   int j;
-   int index;
-
-   t_color c;
-   i = 0;
-   while (i < BOARD_HEIGHT)
-   {
-   j = 0;
-   while (j < BOARD_WIDTH)
-   {
-   if((index = client->board.map[i][j]))
-   {
-   c.color = client->response.players_data[index - 1].color;
-//		printf("%.6x\n", c.color);
-SDL_SetRenderDrawColor(client->sdl.renderer, c.argb.r, c.argb.g, c.argb.b, 255);
-SDL_RenderDrawPoint(client->sdl.renderer, j, i);
-}
-j++;
-}
-i++;
-}
-}
-*/
 
 void	ft_render_board(t_client *client)
 {
@@ -207,7 +188,6 @@ void	ft_render_board(t_client *client)
 
 	int *pixels = (int *)client->sdl.surface->pixels;
 	int surface_width =  client->sdl.surface->w;
-	t_color c;
 	i = 0;
 	while (i < BOARD_HEIGHT)
 	{
@@ -222,9 +202,6 @@ void	ft_render_board(t_client *client)
 		}
 		i++;
 	}
-	client->sdl.texture = SDL_CreateTextureFromSurface(client->sdl.renderer, client->sdl.surface);
-	SDL_RenderCopy(client->sdl.renderer, client->sdl.texture, NULL, NULL);
-	SDL_DestroyTexture(client->sdl.texture);
 }
 
 void    ft_render(t_client *client)
@@ -232,8 +209,14 @@ void    ft_render(t_client *client)
 	SDL_SetRenderDrawColor(client->sdl.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(client->sdl.renderer);
 	ft_render_board(client);
-	//	ft_render_players(client);
+	ft_render_players(client);
+	
+	client->sdl.texture = SDL_CreateTextureFromSurface(client->sdl.renderer, client->sdl.surface);
+	SDL_RenderCopy(client->sdl.renderer, client->sdl.texture, NULL, NULL);
+	SDL_FillRect(client->sdl.surface, NULL, 0);
+	SDL_DestroyTexture(client->sdl.texture);
 	SDL_RenderPresent(client->sdl.renderer);
+	
 	client->framerate.fps_counter++;
 }
 
@@ -325,7 +308,6 @@ void	ft_process_move_rotate(t_client *client, t_move move)
 	}
 	iter = ft_vec2_dest(center, counter_angle + (rmove.angle * rmove.dir), move.radius + rmove.mobility);
 	ft_update_board(client, iter, move);
-	
 	//client->board.map[(int)rmove.center.y][(int)rmove.center.x].player_index = move.player_index;
 }
 
@@ -333,17 +315,16 @@ void	ft_process_move_forward(t_client *client, t_move move)
 {
 	t_forward_move fmove = move.move_union.fmove;
 	t_vec2 iter = fmove.from;
-	t_vec2 to = fmove.to;
 	double distance;
 
 	distance = 0;
-	while (distance < move.speed)
+	while (distance < fmove.distance)
 	{
 		iter = ft_vec2_dest(iter, move.player_angle, distance);
 		ft_update_board(client, iter, move);
-		distance = ft_fmin(move.speed, distance + 1);
+		distance = ft_fmin(fmove.distance, distance + 1);
 	}
-	iter = ft_vec2_dest(iter, move.player_angle, move.speed);
+	iter = ft_vec2_dest(iter, move.player_angle, fmove.distance);
 	ft_update_board(client, iter, move);
 }
 

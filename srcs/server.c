@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/28 10:07:47 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/09/29 19:20:01 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,8 @@ void	ft_init_player(t_player *player, int index)
 	player->speed = SPEED;
 	player->radius = RADIUS;
 	player->mobility = MOBILITY;
+	player->dash = DASH;
+	player->vulnerability = 1;
 }
 
 void	ft_init_game(t_game *game)
@@ -144,16 +146,6 @@ t_vec2	ft_vec2_dest(t_vec2 pos, double angle, double speed)
 	return (res);
 }
 
-/*
-void	ft_update_angle(char keys[NB_KEYS], t_player *player)
-{
-	if (keys[KEY_LEFT])
-		player->angle -= (DEFAULT_MOBILITY / sqrt(player->radius / INIT_RADIUS)) * sqrt(player->speed / INIT_SPEED);
-	else if (keys[KEY_RIGHT])
-		player->angle += (DEFAULT_MOBILITY / sqrt(player->radius / INIT_RADIUS)) * sqrt(player->speed / INIT_SPEED);
-}
-*/
-
 int		ft_is_in_sphere(double radius, t_vec2 center, t_vec2 pos)
 {
 	return ((pos.x - center.x) * (pos.x - center.x) + (pos.y - center.y) * (pos.y - center.y) < radius * radius);
@@ -220,7 +212,7 @@ int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, double radius, int lol)
 		(int)vec.x, (int)vec.y, vec.x, vec.y);
 	}
 	*/
-	printf("ft_collide_board_sphere(): %d\n", ft_collide_board_sphere(board, radius, vec, from, lol));
+//	printf("ft_collide_board_sphere(): %d\n", ft_collide_board_sphere(board, radius, vec, from, lol));
 	return (vec.x >= 0 && vec.x < board.current_dim.x
 				&& vec.y >= 0 && vec.y < board.current_dim.y
 					&& !ft_collide_board_sphere(board, radius, vec, from, lol));
@@ -312,7 +304,7 @@ void	ft_stack_move_rotate(t_player player, t_move_stack *move_stack, t_vec2 cent
 	move_stack->nb_moves++;
 }
 
-void	ft_stack_move_forward(t_player player, t_move_stack *move_stack, t_vec2 from, t_vec2 to)
+void	ft_stack_move_forward(t_player player, t_move_stack *move_stack, t_vec2 from, double distance)
 {
 	t_forward_move *fmove;
 
@@ -324,7 +316,7 @@ void	ft_stack_move_forward(t_player player, t_move_stack *move_stack, t_vec2 fro
 	ft_fill_move(&(move_stack->moves[move_stack->nb_moves]), player, 0);
 	fmove = &(move_stack->moves[move_stack->nb_moves].move_union.fmove);
 	fmove->from = from;
-	fmove->to = to;
+	fmove->distance = distance;
 	move_stack->nb_moves++;
 }
 
@@ -351,42 +343,45 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 	double counter_angle = player->angle + dir * (M_PI / 2) + M_PI;
 	lol = 1000;
 	res = ft_vec2_dest(center, counter_angle + (angle_to * dir), player->radius + player->mobility);
-	while (angle_iter < angle_to)
+	if (player->vulnerability)
 	{
-		iter = ft_vec2_dest(center, counter_angle + (angle_iter * dir), player->radius + player->mobility);
-		if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-			ft_stack_changes_color(server, iter, player->index);
-		else
+		while (angle_iter < angle_to)
 		{
-			player->dead = 1;
-			res = iter;
-			printf("dead\n");
-			break;
+			iter = ft_vec2_dest(center, counter_angle + (angle_iter * dir), player->radius + player->mobility);
+			if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
+				ft_stack_changes_color(server, iter, player->index);
+			else
+			{
+				player->dead = 1;
+				res = iter;
+				printf("dead\n");
+				break;
+			}
+			angle_iter = ft_fmin(angle_to, angle_iter +  M_PI / 256);
 		}
-		angle_iter = ft_fmin(angle_to, angle_iter +  M_PI / 256);
-	}
-	if (!player->dead)
-	{
-		iter = ft_vec2_dest(center, counter_angle + (angle_to * dir), player->radius + player->mobility);
-		if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-			ft_stack_changes_color(server, iter, player->index);
-		else
+		if (!player->dead)
 		{
-			player->dead = 1;
-			res = iter;
-			printf("dead\n");
+			iter = ft_vec2_dest(center, counter_angle + (angle_to * dir), player->radius + player->mobility);
+			if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
+				ft_stack_changes_color(server, iter, player->index);
+			else
+			{
+				player->dead = 1;
+				res = iter;
+				printf("dead\n");
+			}
 		}
-	}
-	i = 1;
-	while (i < MAX_CLIENTS + 1)
-	{
-		if (!server->cm[i].isfree)
-			ft_stack_move_rotate(*player, &(server->cm[i].changes.move_stack), center, angle_iter, dir);
-		i++;
+		i = 1;
+		while (i < MAX_CLIENTS + 1)
+		{
+			if (!server->cm[i].isfree)
+				ft_stack_move_rotate(*player, &(server->cm[i].changes.move_stack), center, angle_iter, dir);
+			i++;
+		}
+	ft_apply_color_changes(server, player->index);
 	}
 	player->pos = res;
 	player->angle += angle_to * dir;
-	ft_apply_color_changes(server, player->index);
 }
 
 void	ft_process_engine_forward(t_server *server, t_player *player)
@@ -405,55 +400,80 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 	iter = from;
 	double distance;
 
-	distance = 0;
-	while (distance < player->speed)
+	if (player->vulnerability)
 	{
-		iter = ft_vec2_dest(from, player->angle, distance);
-		if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-			ft_stack_changes_color(server, iter, player->index);
-		else
+		distance = 0;
+		while (distance < player->speed)
 		{
-			player->dead = 1;
-			res = iter;
-			printf("dead\n");
-			break;
+			iter = ft_vec2_dest(from, player->angle, distance);
+			if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
+				ft_stack_changes_color(server, iter, player->index);
+			else
+			{
+				player->dead = 1;
+				res = iter;
+				printf("dead\n");
+				break;
+			}
+			distance = ft_fmin(player->speed, distance + 1);
 		}
-		distance = ft_fmin(player->speed, distance + 1);
-	}
-	if (!player->dead)
-	{
-		iter = ft_vec2_dest(from, player->angle, player->speed);
-		if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-			ft_stack_changes_color(server, iter, player->index);
-		else
+		if (!player->dead)
 		{
-			player->dead = 1;
-			res = iter;
-			printf("dead\n");
+			iter = ft_vec2_dest(from, player->angle, player->speed);
+			if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
+				ft_stack_changes_color(server, iter, player->index);
+			else
+			{
+				player->dead = 1;
+				res = iter;
+				printf("dead\n");
+			}
 		}
-	}
-	i = 1;
-	while (i < MAX_CLIENTS + 1)
-	{
-		if (!server->cm[i].isfree)
-			ft_stack_move_forward(*player, &(server->cm[i].changes.move_stack), from, res);
-		i++;
+		i = 1;
+		while (i < MAX_CLIENTS + 1)
+		{
+			if (!server->cm[i].isfree)
+				ft_stack_move_forward(*player, &(server->cm[i].changes.move_stack), from, distance);
+			i++;
+		}
+		ft_apply_color_changes(server, player->index);
 	}
 	player->pos = res;
-	ft_apply_color_changes(server, player->index);
+}
+
+
+void	ft_process_dash(t_server *server, t_player *player)
+{
+	if (player->vulnerability && rand() % 1000 > player->dash)
+	{
+		player->vulnerability = 0;
+		player->vulnerability_countdown = 30;
+	}
+	else if (player->vulnerability_countdown > 0)
+	{
+		printf("vulnerabilty: %f\n", player->vulnerability_countdown);
+		player->vulnerability_countdown -= (player->speed);
+		if (player->vulnerability_countdown <= 0)
+			player->vulnerability = 1;
+	}
+}
+
+void	ft_process_keys_server(t_server *server, t_client_message *message)
+{
+	if (message->keys[KEY_LEFT])
+		ft_process_engine_rotate(server, &(server->game.players[message->player_index]), -1);
+	else if (message->keys[KEY_RIGHT])
+		ft_process_engine_rotate(server, &(server->game.players[message->player_index]), 1);
+	else
+		ft_process_engine_forward(server, &(server->game.players[message->player_index]));
 }
 
 void	ft_process_engine(t_server *server, t_client_message *message)
 {
 	if (!server->game.players[message->player_index].dead)
 	{
-		//	ft_update_angle(message->keys, &(server->game.players[message->player_index]));
-		if (message->keys[KEY_LEFT])
-			ft_process_engine_rotate(server, &(server->game.players[message->player_index]), -1);
-		else if (message->keys[KEY_RIGHT])
-			ft_process_engine_rotate(server, &(server->game.players[message->player_index]), 1);
-		else
-			ft_process_engine_forward(server, &(server->game.players[message->player_index]));
+		ft_process_dash(server, &(server->game.players[message->player_index]));
+		ft_process_keys_server(server, message);
 	}
 }
 
@@ -512,9 +532,8 @@ int		ft_fill_packet_server(t_server *server)
 	if (SDLNet_ResizePacket(server->to_send.packet, total_size) < total_size)
 		ft_error("could not resize packet");
 
-//	if(1)
-//		printf("resized to:%d\n", total_size);
-
+	//	if(1)
+	//		printf("resized to:%d\n", total_size);
 	Uint8 *data = server->to_send.packet->data;
 	
 	size += memcpy_ret(&(data[size]), &(player_index), sizeof(player_index));
@@ -642,6 +661,7 @@ void	ft_process_server(char *port)
 	t_server	server;
 	int			activity;
 
+	srand(time(NULL));
 	if (!ft_init_server(&server, ft_atoi(port)))
 		exit(1);
 //	server.framerate.ms_counter = SDL_GetTicks();
