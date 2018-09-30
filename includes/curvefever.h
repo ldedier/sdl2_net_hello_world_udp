@@ -21,7 +21,7 @@
 # define MARGIN				0
 
 # define MOBILITY			30
-# define SPEED				20
+# define SPEED				1.5
 # define RADIUS				5
 # define DASH				993
 

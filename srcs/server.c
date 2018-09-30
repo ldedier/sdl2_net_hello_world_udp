@@ -441,7 +441,6 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 	player->pos = res;
 }
 
-
 void	ft_process_dash(t_server *server, t_player *player)
 {
 	if (player->vulnerability && rand() % 1000 > player->dash)
