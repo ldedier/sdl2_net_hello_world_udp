@@ -81,13 +81,6 @@ int		ft_receive_connection_packet(t_client *client)
 		printf("%d\n", int_8_data[0]); // player_index
 		printf("%d\n", int_32_data[0]); // message_number
 		printf("%d\n", int_32_data[1]); // nb_moves
-		
-		if(int_32_data[1] > 1)
-		{
-			printf("OLALALA\n");
-			exit(1);
-		}
-
 		printf("%d\n", int_32_data[2]); // nb_events
 		printf("%d\n", int_32_data[3]); // nb_players	
 
@@ -182,7 +175,8 @@ void	ft_render_players(t_client *client)
 	i = 0;
 	while (i < client->response.nb_players)
 	{
-		ft_render_player(client, client->response.players_data[i]);
+		if (!client->response.players_data[i].dead)
+			ft_render_player(client, client->response.players_data[i]);
 		i++;
 	}
 }
@@ -217,13 +211,13 @@ void    ft_render(t_client *client)
 	SDL_RenderClear(client->sdl.renderer);
 	ft_render_board(client);
 	ft_render_players(client);
-	
+
 	client->sdl.texture = SDL_CreateTextureFromSurface(client->sdl.renderer, client->sdl.surface);
 	SDL_RenderCopy(client->sdl.renderer, client->sdl.texture, NULL, NULL);
 	SDL_FillRect(client->sdl.surface, NULL, 0);
 	SDL_DestroyTexture(client->sdl.texture);
 	SDL_RenderPresent(client->sdl.renderer);
-	
+
 	client->framerate.fps_counter++;
 }
 
@@ -270,8 +264,27 @@ void	ft_receive_data_back(t_client *client)
    ft_print_vec2(move.from);
    ft_print_vec2(move.to);
    }
-*/
+ */
 
+void    ft_update_board(t_client *client, t_vec2 pos, t_move move)
+{
+	t_vec2 from;
+	t_vec2 iter;
+	double distance;
+
+	distance = 0;
+	from = ft_vec2_dest(pos, move.player_angle + M_PI / 2, move.radius);
+	while (distance < move.radius * 2)
+	{
+		iter = ft_vec2_dest(from, move.player_angle - M_PI / 2, distance);
+		client->board.map[(int)iter.y][(int)iter.x].player_index = move.player_index;
+		distance = ft_fmin(distance + 0.5, move.radius * 2);
+	}
+	iter = ft_vec2_dest(from, move.player_angle - M_PI / 2, move.radius * 2);
+	client->board.map[(int)iter.y][(int)iter.x].player_index = move.player_index;
+}
+
+/*
 void	ft_update_board(t_client *client, t_vec2 iter, t_move move)
 {
 	double radius = move.radius;
@@ -296,6 +309,7 @@ void	ft_update_board(t_client *client, t_vec2 iter, t_move move)
 		i++;
 	}
 }
+*/
 
 void	ft_process_move_rotate(t_client *client, t_move move)
 {
@@ -315,7 +329,7 @@ void	ft_process_move_rotate(t_client *client, t_move move)
 	}
 	iter = ft_vec2_dest(center, counter_angle + (rmove.angle * rmove.dir), move.radius + rmove.mobility);
 	ft_update_board(client, iter, move);
-//	client->board.map[(int)rmove.center.y][(int)rmove.center.x].player_index = move.player_index;
+	//	client->board.map[(int)rmove.center.y][(int)rmove.center.x].player_index = move.player_index;
 }
 
 void	ft_process_move_forward(t_client *client, t_move move)

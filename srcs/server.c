@@ -146,6 +146,28 @@ t_vec2	ft_vec2_dest(t_vec2 pos, double angle, double speed)
 	return (res);
 }
 
+
+int		ft_is_in_diameter(t_player player, t_vec2 center, t_ivec2 pos)
+{
+	t_vec2 from;
+	t_vec2 iter;
+	double distance;
+
+	distance = 0;
+	from = ft_vec2_dest(center, player.angle + M_PI / 2, player.radius);
+	while (distance < player.radius * 2)
+	{
+		iter = ft_vec2_dest(from, player.angle - M_PI / 2, distance);
+		if ((int)iter.y ==  pos.y && (int)iter.x == pos.x)
+			return (1);
+		distance = ft_fmin(distance + 0.5, player.radius * 2);
+	}
+	iter = ft_vec2_dest(from, player.angle - M_PI / 2, player.radius * 2);
+	if ((int)iter.y ==  pos.y && (int)iter.x == pos.x)
+		return (1);
+	return (0);
+}
+
 int		ft_is_in_sphere(double radius, t_vec2 center, t_vec2 pos)
 {
 	return ((pos.x - center.x) * (pos.x - center.x) + (pos.y - center.y) * (pos.y - center.y) < radius * radius);
@@ -157,6 +179,49 @@ int		ft_is_on_board(t_board board, int x, int y)
 			&& y >= 0 && y < board.current_dim.y);
 }
 
+
+t_ivec2 ft_vec2_to_ivec2(t_vec2 vec)
+{
+	t_ivec2 res;
+
+	res.x = (int) vec.x;
+	res.y = (int) vec.y;
+	return res;
+}
+
+int		ft_collide_board_sphere(t_board board, t_player player, t_vec2 pos, t_vec2 except, int lol)
+{
+	t_vec2 from;
+	t_vec2 iter;
+	double distance;
+	t_ivec2 check;
+
+	distance = 0;
+	from = ft_vec2_dest(pos, player.angle + M_PI / 2, player.radius);
+	while (distance < player.radius * 2)
+	{
+		iter = ft_vec2_dest(from, player.angle - M_PI / 2, distance);
+		check = ft_vec2_to_ivec2(iter);
+		if (!ft_is_on_board(board, check.x, check.y) || (board.map[check.y][check.x].player_index && !ft_is_in_diameter(player, except, check)))
+		{
+			printf("cogne dans le mur: %d\n", !ft_is_on_board(board, check.x, check.y) );
+			printf("rempli: %d\n",board.map[check.y][check.x].player_index);
+			printf("pas dans le diameter: %d\n", !ft_is_in_diameter(player, except, check));
+			printf("intersect: %d\n", (board.map[check.y][check.x].player_index && !ft_is_in_diameter(player, except, check)));
+			printf("lol: %d\n",lol); 
+			return (1);
+		}
+		distance = ft_fmin(distance + 0.5, player.radius * 2);
+	}
+	iter = ft_vec2_dest(from, player.angle - M_PI / 2, player.radius * 2);
+	check = ft_vec2_to_ivec2(iter);
+	if (!ft_is_on_board(board, check.x, check.y) || (board.map[check.y][check.x].player_index && !ft_is_in_diameter(player, except, check)))
+		return (1);
+		printf("on collide AP\n");
+	return (0);
+}
+
+/*
 int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2 except, int lol)
 {
 	int i;
@@ -169,14 +234,12 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 		while ((j - center.x) * (j - center.x) + ((i - center.y) * (i - center.y)) < radius * radius)
 		{
 			if (!ft_is_on_board(board, j, i) || (board.map[i][j].player_index && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
-			{
-				/*
+			{	
 				printf("cogne dans le mur a:%d\n", !ft_is_on_board(board, j, i));
 				printf("rempli a :%d\n", board.map[i][j].player_index);
 				printf("pas dans la sphere a :%d\n", !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)));
 				printf("intersect a:%d\n", (board.map[i][j].player_index && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))));
 				printf("lol a:%d\n",lol); 
-				*/
 				return (1);
 			}
 			j--;
@@ -186,13 +249,12 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 		{
 			if (!ft_is_on_board(board, j, i) || (board.map[i][j].player_index && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))))
 			{
-				/*
+				
 				printf("cogne dans le mur b:%d\n", !ft_is_on_board(board, j, i));
 				printf("rempli b :%d\n", board.map[i][j].player_index);
 				printf("pas dans la sphere b :%d\n", !ft_is_in_sphere(radius, except, ft_new_vec2(j, i)));
 				printf("intersect b:%d\n", (board.map[i][j].player_index && !ft_is_in_sphere(radius, except, ft_new_vec2(j, i))));
 				printf("lol b:%d\n",lol); 
-				*/
 				return (1);
 			}
 			j++;
@@ -201,9 +263,9 @@ int		ft_collide_board_sphere(t_board board, double radius, t_vec2 center, t_vec2
 	}
 	return (0);
 }
+*/
 
-
-int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, double radius, int lol)
+int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, t_player player, int lol)
 {
 	/*
 	if (board.map[(int)vec.y][(int)vec.x])
@@ -215,7 +277,7 @@ int		ft_iz_okay(t_board board, t_vec2 vec, t_vec2 from, double radius, int lol)
 //	printf("ft_collide_board_sphere(): %d\n", ft_collide_board_sphere(board, radius, vec, from, lol));
 	return (vec.x >= 0 && vec.x < board.current_dim.x
 				&& vec.y >= 0 && vec.y < board.current_dim.y
-					&& !ft_collide_board_sphere(board, radius, vec, from, lol));
+					&& !ft_collide_board_sphere(board, player, vec, from, lol));
 }
 
 void	ft_print_vec2(t_vec2 vec)
@@ -248,33 +310,25 @@ void	ft_apply_color_changes(t_server *server, char player_index)
 		}
 		i++;
 	}
+	printf("on vient d'add des obstacles!!11!1\n");
 }
 
-void	ft_stack_changes_color(t_server *server, t_vec2 iter, char player_index)
+void	ft_stack_changes_color(t_server *server, t_vec2 pos, t_player *player)
 {
-	double radius;
-	int i;
-	int j;
-
-	radius = server->game.players[player_index].radius;
+	t_vec2 from;
+	t_vec2 iter;
+	double distance;
 	
-	i = iter.y - radius;
-	while (i < iter.y + radius)
+	distance = 0;
+	from = ft_vec2_dest(pos, player->angle + M_PI / 2, player->radius);
+	while (distance < player->radius * 2)
 	{
-		j  = (int)iter.x;
-		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
-		{
-			server->board.map[i][j].parsed = 1;
-			j--;
-		}
-		j  = (int)iter.x + 1;
-		while ((j - iter.x) * (j - iter.x) + ((i - iter.y) * (i - iter.y)) < radius * radius)
-		{
-			server->board.map[i][j].parsed = 1;
-			j++;
-		}
-		i++;
+		iter = ft_vec2_dest(from, player->angle - M_PI / 2, distance);
+		server->board.map[(int)iter.y][(int)iter.x].parsed = 1;
+		distance = ft_fmin(distance + 0.5, player->radius * 2);
 	}
+	iter = ft_vec2_dest(from, player->angle - M_PI / 2, player->radius * 2);
+	server->board.map[(int)iter.y][(int)iter.x].parsed = 1;
 }
 
 void	ft_fill_move(t_move *move, t_player player, char is_rotate)
@@ -338,6 +392,7 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 	center = ft_get_rotation_center(player, dir);
 	from = player->pos;
 	iter = from;
+	t_vec2 previous = from;
 	double angle_to = player->speed / (player->radius + player->mobility);
 	double angle_iter = 0;	
 	double counter_angle = player->angle + dir * (M_PI / 2) + M_PI;
@@ -348,8 +403,11 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 		while (angle_iter < angle_to)
 		{
 			iter = ft_vec2_dest(center, counter_angle + (angle_iter * dir), player->radius + player->mobility);
-			if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-				ft_stack_changes_color(server, iter, player->index);
+			if (ft_iz_okay(server->board, iter, from, *player, lol++))
+			{
+				previous = iter;
+				ft_stack_changes_color(server, iter, player);
+			}
 			else
 			{
 				player->dead = 1;
@@ -362,8 +420,8 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 		if (!player->dead)
 		{
 			iter = ft_vec2_dest(center, counter_angle + (angle_to * dir), player->radius + player->mobility);
-			if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-				ft_stack_changes_color(server, iter, player->index);
+			if (ft_iz_okay(server->board, iter, from, *player, lol++))
+				ft_stack_changes_color(server, iter, player);
 			else
 			{
 				player->dead = 1;
@@ -399,6 +457,7 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 	res = to;
 	iter = from;
 	double distance;
+	t_vec2 previous = from;
 
 	if (player->vulnerability)
 	{
@@ -406,8 +465,11 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 		while (distance < player->speed)
 		{
 			iter = ft_vec2_dest(from, player->angle, distance);
-			if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-				ft_stack_changes_color(server, iter, player->index);
+			if (ft_iz_okay(server->board, iter, from, *player, lol++))
+			{
+				previous = iter;
+				ft_stack_changes_color(server, iter, player);
+			}
 			else
 			{
 				player->dead = 1;
@@ -420,8 +482,8 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 		if (!player->dead)
 		{
 			iter = ft_vec2_dest(from, player->angle, player->speed);
-			if (ft_iz_okay(server->board, iter, from, player->radius, lol++))
-				ft_stack_changes_color(server, iter, player->index);
+			if (ft_iz_okay(server->board, iter, from, *player, lol++))
+				ft_stack_changes_color(server, iter, player);
 			else
 			{
 				player->dead = 1;
