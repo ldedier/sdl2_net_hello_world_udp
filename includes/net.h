@@ -165,7 +165,37 @@ void					ft_process_delta_first(t_framerate *framerate);
 void					ft_process_delta(t_framerate *framerate);
 void					ft_print_fps(t_framerate *framerate);
 t_packet_vector			ft_create_packet_vector(size_t data_size);
-void					ft_memcpy_to_packet_vector(void *source, UDPpacket **packet_vector, size_t size);
-void					ft_memcpy_from_packet_vector(void *dest, UDPpacket **packet_vector);
-void					ft_address_packets(UDPpacket **packet_vector, IPaddress address);
+void					ft_memcpy_to_packet_vector(void *source,
+							UDPpacket **packet_vector, size_t size);
+void					ft_memcpy_from_packet_vector(void *dest,
+							UDPpacket **packet_vector);
+void					ft_address_packets(UDPpacket **packet_vector,
+							IPaddress address);
+int						ft_init_client(t_client *c, char *serv_name, int port);
+void					ft_process_move(t_client *client, t_move move);
+int						ft_send_data(t_client *client, int flag);
+int						ft_connect_to_server(t_client *client);
+void					ft_process_data_back(t_client *client);
+void					ft_check_for_data_back(t_client *client);
+void					ft_render(t_client *client);
+void					ft_reset_changes(t_changes *changes);
+void					ft_init_player(t_player *player, int index);
+int						ft_init_server(t_server *server, int port);
+void					ft_process_engine(t_server *server,
+							t_client_message *message);
+void					ft_stack_changes_color(t_server *server,
+							t_vec2 iter, t_player *player);
+void					ft_stack_move_forward(t_player player, t_move_stack *stack, t_vec2 from, double distance);
+void					ft_stack_move_rotate(t_player player, t_move_stack *stack,
+							t_vec2 center, double angle, char dir, double angle_init);
+int						ft_fill_packet_server(t_server *server);
+void					ft_check_for_data(t_server *server);
+void					ft_deconnect(t_server *server, char player_index);
+void					ft_update_time_out(t_server *server);
+int						ft_iz_okay(t_board board, t_vec2 vec,
+							t_vec2 from, t_player player);
+void					ft_process_engine_forward(t_server *server,
+							t_player *player);
+void					ft_process_engine_rotate(t_server *server,
+							t_player *player, int dir);
 #endif

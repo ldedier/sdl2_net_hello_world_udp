@@ -48,7 +48,13 @@ LIBSDL2NET_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_net/2.0.1/include/SDL2/
 LIBSDL2MIXER_INCLUDEDIR_MB = /usr/local/Cellar/sdl2_mixer/2.0.2_3/include/SDL2/
 
 SRCS_NO_PREFIX =	main.c client.c server.c network.c sdl.c ft_events.c\
-					ft_events_state.c framerate.c curvefever.c
+					ft_events_state.c framerate.c curvefever.c client_init.c\
+					client_process_move.c  client_connect.c client_interact.c\
+					client_render.c utils.c client_process_data.c\
+					server_init.c vec.c server_process_engine.c\
+					server_stack_moves.c server_fill_packet.c\
+					server_interact.c server_disconnect.c server_collide.c\
+					server_process_board.c
 
 INCLUDES_NO_PREFIX = net.h curvefever.h
 

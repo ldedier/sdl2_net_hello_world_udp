@@ -1,32 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   server.c                                           :+:      :+:    :+:   */
+/*   client.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/08/12 14:54:59 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/29 19:20:01 by ldedier          ###   ########.fr       */
+/*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
+/*   Updated: 2018/09/29 21:31:54 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "net.h"
 
-void	ft_process_server(char *port)
+void	ft_process_data_board(t_client *client)
 {
-	t_server	server;
-	int			activity;
+	int i;
+	t_move move;
+	i = 0;
 
-	srand(time(NULL));
-	if (!ft_init_server(&server, ft_atoi(port)))
-		exit(1);
-	while (server.on)
+	while (i < client->response.nb_moves)
 	{
-		activity = SDLNet_CheckSockets(server.socket_set, 1000);
-		if (activity <= 0)
-			ft_printf("no activity...\n");
-		else
-			ft_check_for_data(&server);
-		ft_update_time_out(&server);
+		move = client->response.move_data[i];
+		ft_process_move(client, move);
+		i++;
 	}
+}
+
+void	ft_process_data_back(t_client *client)
+{
+	ft_process_data_board(client);
 }

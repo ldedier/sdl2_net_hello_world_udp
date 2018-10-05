@@ -21,8 +21,8 @@
 # define MARGIN				0
 
 # define MOBILITY			30
-# define SPEED				2
-# define RADIUS				5
+# define SPEED				1.5
+# define RADIUS				10
 # define DASH				993
 
 typedef struct          s_vec2
@@ -86,6 +86,7 @@ typedef struct			s_rotate_move
 {
 	t_vec2				center;
 	double				angle;
+	double				angle_init;
 	double				mobility;
 	char				dir;
 }						t_rotate_move;
@@ -126,8 +127,8 @@ typedef struct			s_changes
 
 typedef struct			s_tile
 {
-	char				player_index : 7;
-	char				parsed : 1;
+	char				player_index : 4;
+	char				parsed : 4;
 }						t_tile;
 
 typedef struct			s_board
@@ -149,7 +150,9 @@ typedef struct			s_client_response
 
 void					ft_init_board(t_board *board);
 void					ft_clear_board(t_board *board);
+int						ft_is_on_board(t_board board, int x, int y);
 void					ft_print_vec2(t_vec2 vec2);
 void					ft_print_ivec2(t_ivec2 vec2);
 t_vec2					ft_vec2_dest(t_vec2 pos, double angle, double speed);
+t_ivec2                 ft_vec2_to_ivec2(t_vec2 iter);
 #endif
