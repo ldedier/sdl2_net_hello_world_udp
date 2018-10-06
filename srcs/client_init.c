@@ -55,7 +55,7 @@ int	ft_init_client(t_client *client, char *server_ip, int remote_port)
 		return (0);
 	//	ft_load_textures(&(client->sdl)); // to protect
 	ft_init_keys(client->to_send.message->keys);
-	ft_init_board(&(client->board));
+	ft_init_client_board(&(client->board));
 	client->to_send.packet->address.port = client->server_ip.port;
 	client->to_send.packet->address.host = client->server_ip.host;
 	client->received.message->player_index = -1;

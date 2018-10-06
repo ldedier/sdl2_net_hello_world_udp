@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   client.c                                           :+:      :+:    :+:   */
+/*   client_render.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/08/02 23:56:28 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/29 21:31:54 by ldedier          ###   ########.fr       */
+/*   Created: 2018/10/06 17:35:12 by ldedier           #+#    #+#             */
+/*   Updated: 2018/10/06 17:35:12 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,9 +69,9 @@ void	ft_render_board(t_client *client)
 		j = 0;
 		while (j < BOARD_WIDTH)
 		{
-			if ((index = client->board.map[i][j].player_index))
+			if ((index = client->board.map[i][j].color))
 			{
-				pixels[i * surface_width + j] = client->response.players_data[index - 1].color;
+				pixels[i * surface_width + j] = client->board.map[i][j].color;
 			}
 			j++;
 		}

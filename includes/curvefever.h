@@ -22,7 +22,7 @@
 
 # define MOBILITY			30
 # define SPEED				1.5
-# define RADIUS				10
+# define RADIUS				5
 # define DASH				993
 
 typedef struct          s_vec2
@@ -78,13 +78,11 @@ typedef union			u_color
 
 typedef struct			s_forward_move
 {
-	t_vec2				from;
 	double				distance;
 }						t_forward_move;
 
 typedef struct			s_rotate_move
 {
-	t_vec2				center;
 	double				angle;
 	double				angle_init;
 	double				mobility;
@@ -99,12 +97,14 @@ typedef union			u_move_union
 
 typedef struct			s_move
 {
-	char				is_rotate;
 	t_move_union		move_union;
+	char				is_rotate;
+	t_vec2				origin;
 	double				radius;
 	double				speed;
 	double				player_angle;
 	char				player_index;
+	int					color;
 }						t_move;
 
 typedef struct			s_move_stack
@@ -138,6 +138,39 @@ typedef struct			s_board
 	t_ivec2				init_dim;
 }						t_board;
 
+typedef struct			s_client_tile
+{
+	int					color;
+}						t_client_tile;
+
+typedef struct			s_client_board
+{
+	t_client_tile		**map;
+	t_ivec2				current_dim;
+	t_ivec2				init_dim;
+}						t_client_board;
+
+typedef struct			s_segment
+{
+	t_vec2				a;
+	t_vec2				b;
+}						t_segment;
+
+typedef struct			s_aa
+{
+	t_segment			segment;
+	t_vec2				inter_a;
+	t_vec2				inter_b;
+	char				up;
+	char				down;
+	char				right;
+	char				left;
+	t_vec2				up_intersection;
+	t_vec2				down_intersection;
+	t_vec2				right_intersection;
+	t_vec2				left_intersection;
+}						t_aa;
+
 typedef struct			s_client_response
 {
 	t_move				*move_data;
@@ -149,10 +182,12 @@ typedef struct			s_client_response
 }						t_client_response;
 
 void					ft_init_board(t_board *board);
+void					ft_init_client_board(t_client_board *board);
 void					ft_clear_board(t_board *board);
-int						ft_is_on_board(t_board board, int x, int y);
+int						ft_is_on_board(t_ivec2 dim, int x, int y);
 void					ft_print_vec2(t_vec2 vec2);
 void					ft_print_ivec2(t_ivec2 vec2);
 t_vec2					ft_vec2_dest(t_vec2 pos, double angle, double speed);
 t_ivec2                 ft_vec2_to_ivec2(t_vec2 iter);
+t_vec2 					ft_new_vec2(double x, double y);
 #endif

@@ -48,7 +48,7 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 	t_vec2 res;
 	int i;
 	t_vec2 center;
-	
+
 	center = ft_get_rotation_center(player, dir);
 	from = player->pos;
 	iter = from;
@@ -58,6 +58,7 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 	double angle_iter;
 	angle_iter = 0;
 	double counter_angle = player->angle + dir * (M_PI / 2) + M_PI;
+
 	res = ft_vec2_dest(center, counter_angle + (angle_to * dir), player->radius + player->mobility);
 	if (player->vulnerability)
 	{
@@ -65,7 +66,7 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 		{
 			iter = ft_vec2_dest(center, counter_angle + (angle_iter * dir), player->radius + player->mobility);
 			player->angle = angle_init + angle_iter * dir;
-			if (ft_iz_okay(server->board, iter, from, *player))
+			if (ft_iz_okay(server->board, iter, *player))
 				ft_stack_changes_color(server, iter, player);
 			else
 			{
@@ -80,7 +81,7 @@ void	ft_process_engine_rotate(t_server *server, t_player *player, int dir)
 		{
 			iter = ft_vec2_dest(center, counter_angle + (angle_to * dir), player->radius + player->mobility);
 			player->angle = angle_init + angle_to * dir;
-			if (ft_iz_okay(server->board, iter, from, *player))
+			if (ft_iz_okay(server->board, iter, *player))
 				ft_stack_changes_color(server, iter, player);
 			else
 			{
@@ -116,7 +117,6 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 	res = to;
 	iter = from;
 	double distance;
-	t_vec2 previous = from;
 
 	if (player->vulnerability)
 	{
@@ -124,9 +124,8 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 		while (distance < player->speed)
 		{
 			iter = ft_vec2_dest(from, player->angle, distance);
-			if (ft_iz_okay(server->board, iter, from, *player))
+			if (ft_iz_okay(server->board, iter, *player))
 			{
-				previous = iter;
 				ft_stack_changes_color(server, iter, player);
 			}
 			else
@@ -141,7 +140,7 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 		if (!player->dead)
 		{
 			iter = ft_vec2_dest(from, player->angle, player->speed);
-			if (ft_iz_okay(server->board, iter, from, *player))
+			if (ft_iz_okay(server->board, iter, *player))
 				ft_stack_changes_color(server, iter, player);
 			else
 			{
@@ -154,7 +153,7 @@ void	ft_process_engine_forward(t_server *server, t_player *player)
 		while (i < MAX_CLIENTS + 1)
 		{
 			if (!server->cm[i].isfree)
-				ft_stack_move_forward(*player, &(server->cm[i].changes.move_stack), from, distance);
+				ft_stack_move_forward(*player, &(server->cm[i].changes.move_stack), distance);
 			i++;
 		}
 		ft_apply_color_changes(server, player->index);

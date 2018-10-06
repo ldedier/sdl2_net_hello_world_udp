@@ -23,18 +23,20 @@ void	ft_stack_changes_color(t_server *server, t_vec2 pos, t_player *player)
 	while (distance < player->radius * 2)
 	{
 		iter = ft_vec2_dest(from, player->angle - M_PI / 2, distance);
-		if (ft_is_on_board(server->board, (int)iter.x, (int)iter.y))
+		if (ft_is_on_board(server->board.current_dim, (int)iter.x, (int)iter.y))
 			server->board.map[(int)iter.y][(int)iter.x].parsed = player->index;
 		distance = ft_fmin(distance + 0.5, player->radius * 2);
 	}
 	iter = ft_vec2_dest(from, player->angle - M_PI / 2, player->radius * 2);
-	if (ft_is_on_board(server->board, (int)iter.x, (int)iter.y))
+	if (ft_is_on_board(server->board.current_dim, (int)iter.x, (int)iter.y))
 		server->board.map[(int)iter.y][(int)iter.x].parsed = player->index;
 }
 
 void	ft_fill_move(t_move *move, t_player player, char is_rotate)
 {
+	move->origin = player.pos;
 	move->player_index = player.index;
+	move->color = player.color;
 	move->player_angle = player.angle;
 	move->speed = player.speed;
 	move->radius = player.radius;
@@ -52,7 +54,6 @@ void	ft_stack_move_rotate(t_player player, t_move_stack *move_stack, t_vec2 cent
 	}
 	ft_fill_move(&(move_stack->moves[move_stack->nb_moves]), player, 1);
 	rmove = &(move_stack->moves[move_stack->nb_moves].move_union.rmove);
-	rmove->center = center;
 	rmove->angle = angle;
 	rmove->angle_init = angle_init;
 	rmove->dir = dir;
@@ -60,7 +61,7 @@ void	ft_stack_move_rotate(t_player player, t_move_stack *move_stack, t_vec2 cent
 	move_stack->nb_moves++;
 }
 
-void	ft_stack_move_forward(t_player player, t_move_stack *move_stack, t_vec2 from, double distance)
+void	ft_stack_move_forward(t_player player, t_move_stack *move_stack, double distance)
 {
 	t_forward_move *fmove;
 
@@ -71,7 +72,6 @@ void	ft_stack_move_forward(t_player player, t_move_stack *move_stack, t_vec2 fro
 	}
 	ft_fill_move(&(move_stack->moves[move_stack->nb_moves]), player, 0);
 	fmove = &(move_stack->moves[move_stack->nb_moves].move_union.fmove);
-	fmove->from = from;
 	fmove->distance = distance;
 	move_stack->nb_moves++;
 }
