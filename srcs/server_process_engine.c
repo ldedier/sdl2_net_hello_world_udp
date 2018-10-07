@@ -17,11 +17,11 @@ void	ft_process_dash(t_server *server, t_player *player)
 	if (player->vulnerability && rand() % 1000 > player->dash)
 	{
 		player->vulnerability = 0;
-		player->vulnerability_countdown = 30;
+		player->vulnerability_countdown = 20;
 	}
 	else if (player->vulnerability_countdown > 0)
 	{
-		printf("vulnerabilty: %f\n", player->vulnerability_countdown);
+//		printf("vulnerabilty: %f\n", player->vulnerability_countdown);
 		player->vulnerability_countdown -= (player->speed);
 		if (player->vulnerability_countdown <= 0)
 			player->vulnerability = 1;

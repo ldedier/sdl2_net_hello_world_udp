@@ -28,17 +28,17 @@ int		ft_collide_board_diameter(t_board board, t_player player, t_vec2 pos)
 
 	distance = 0;
 	i = 0;
-	from = ft_vec2_dest(pos, player.angle + M_PI / 2, player.radius);
-	while (distance < player.radius * 2)
+	from = ft_vec2_dest(pos, player.angle + M_PI / 2, (player.radius - EPSILON));
+	while (distance < (player.radius - EPSILON) * 2)
 	{
 		iter = ft_vec2_dest(from, player.angle - M_PI / 2, distance);
 		check = ft_vec2_to_ivec2(iter);
 		if (!ft_is_on_board(board.current_dim, check.x, check.y) || (board.map[check.y][check.x].player_index && board.map[check.y][check.x].parsed != player.index))
 			return (1);
-		distance = ft_fmin(distance + 0.5, player.radius * 2);
+		distance = ft_fmin(distance + 0.5, (player.radius - EPSILON) * 2);
 		i++;
 	}
-	iter = ft_vec2_dest(from, player.angle - M_PI / 2, player.radius * 2);
+	iter = ft_vec2_dest(from, player.angle - M_PI / 2, (player.radius - EPSILON)  * 2);
 	check = ft_vec2_to_ivec2(iter);
 	if (!ft_is_on_board(board.current_dim, check.x, check.y) || (board.map[check.y][check.x].player_index && board.map[check.y][check.x].parsed != player.index))
 		return (1);

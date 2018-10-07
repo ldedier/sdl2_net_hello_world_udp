@@ -55,6 +55,8 @@ void	ft_init_client_board(t_client_board *board)
 		while (j < BOARD_WIDTH)
 		{
 			board->map[i][j].color = 0;
+			board->map[i][j].area = 0;
+			board->map[i][j].parsed = 0;
 			j++;
 		}
 		i++;

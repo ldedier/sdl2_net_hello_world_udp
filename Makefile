@@ -54,7 +54,7 @@ SRCS_NO_PREFIX =	main.c client.c server.c network.c sdl.c ft_events.c\
 					server_init.c vec.c server_process_engine.c\
 					server_stack_moves.c server_fill_packet.c\
 					server_interact.c server_disconnect.c server_collide.c\
-					server_process_board.c
+					server_process_board.c client_anti_alias.c
 
 INCLUDES_NO_PREFIX = net.h curvefever.h
 

@@ -18,7 +18,7 @@
 # define MAX_MOVES			20
 # define MAX_FLAGS			15
 # define DEFAULT_MOBILITY	M_PI / 128
-# define MARGIN				0
+# define EPSILON			2
 
 # define MOBILITY			30
 # define SPEED				1.5
@@ -62,6 +62,7 @@ typedef struct          s_player
 //	int					score;
 }						t_player;
 
+/*
 typedef struct			s_argb
 {
 	char				b;
@@ -75,6 +76,18 @@ typedef union			u_color
 	int					color;
 	t_argb				argb;
 }						t_color;
+*/
+
+typedef struct			s_color
+{
+	unsigned char		a;
+	unsigned char		r;
+	unsigned char		g;
+	unsigned char		b;
+	int					col;
+}						t_color;
+
+
 
 typedef struct			s_forward_move
 {
@@ -141,6 +154,8 @@ typedef struct			s_board
 typedef struct			s_client_tile
 {
 	int					color;
+	double				area;
+	char				parsed;
 }						t_client_tile;
 
 typedef struct			s_client_board
@@ -159,16 +174,13 @@ typedef struct			s_segment
 typedef struct			s_aa
 {
 	t_segment			segment;
-	t_vec2				inter_a;
-	t_vec2				inter_b;
 	char				up;
 	char				down;
 	char				right;
 	char				left;
-	t_vec2				up_intersection;
-	t_vec2				down_intersection;
-	t_vec2				right_intersection;
-	t_vec2				left_intersection;
+	t_vec2				intersections[4];
+	char				nb_intersections;
+	t_vec2				others[2];
 }						t_aa;
 
 typedef struct			s_client_response
@@ -190,4 +202,5 @@ void					ft_print_ivec2(t_ivec2 vec2);
 t_vec2					ft_vec2_dest(t_vec2 pos, double angle, double speed);
 t_ivec2                 ft_vec2_to_ivec2(t_vec2 iter);
 t_vec2 					ft_new_vec2(double x, double y);
+int						ft_aa_color(t_vec2 iter, double angle, t_vec2 pos, int color);
 #endif

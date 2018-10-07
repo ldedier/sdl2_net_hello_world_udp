@@ -25,7 +25,7 @@ void	ft_stack_changes_color(t_server *server, t_vec2 pos, t_player *player)
 		iter = ft_vec2_dest(from, player->angle - M_PI / 2, distance);
 		if (ft_is_on_board(server->board.current_dim, (int)iter.x, (int)iter.y))
 			server->board.map[(int)iter.y][(int)iter.x].parsed = player->index;
-		distance = ft_fmin(distance + 0.5, player->radius * 2);
+		distance = ft_fmin(distance + 0.25, player->radius * 2);
 	}
 	iter = ft_vec2_dest(from, player->angle - M_PI / 2, player->radius * 2);
 	if (ft_is_on_board(server->board.current_dim, (int)iter.x, (int)iter.y))
