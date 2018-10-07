@@ -30,6 +30,16 @@ void	ft_init_parse_client_board(t_client_board *board)
 	}
 }
 
+void	ft_update_tile(t_client_tile *tile, double area, int color)
+{
+	if (area > tile->area)
+	{
+		tile->color = ft_color_shade(color, area);
+		tile->area = area;
+	}
+	tile->parsed = 1;
+}
+
 void    ft_update_board(t_client *client, t_vec2 pos, t_move move)
 {
 	t_vec2 from;
@@ -42,25 +52,26 @@ void    ft_update_board(t_client *client, t_vec2 pos, t_move move)
 
 	iter = ft_vec2_dest(from, move.player_angle - M_PI / 2, move.radius * 2);
 	if (ft_is_on_board(client->board.current_dim, (int)iter.x, (int)iter.y)
-		&& !client->board.map[(int)iter.y][(int)iter.x].color)
+		&& !client->board.map[(int)iter.y][(int)iter.x].parsed)
 	{
-		client->board.map[(int)iter.y][(int)iter.x].color =
-			ft_aa_color(iter, move.player_angle - M_PI / 2, pos, move.color);
+		ft_update_tile(&(client->board.map[(int)iter.y][(int)iter.x]),
+		ft_aa_area(iter, move.player_angle - M_PI / 2, pos), move.color);
 		//	client->board.map[(int)iter.y][(int)iter.x].color = move.color;
 	}
 	while (distance < move.radius * 2)
 	{
 		iter = ft_vec2_dest(from, move.player_angle - M_PI / 2, distance);
 		if (ft_is_on_board(client->board.current_dim, (int)iter.x, (int)iter.y)
-				&& !client->board.map[(int)iter.y][(int)iter.x].color)
+				&& !client->board.map[(int)iter.y][(int)iter.x].parsed)
 		{
 			if (first)
 			{
-				client->board.map[(int)iter.y][(int)iter.x].color =
-					ft_aa_color(iter, move.player_angle + M_PI / 2, pos, move.color);
+				ft_update_tile(&(client->board.map[(int)iter.y][(int)iter.x]),
+					ft_aa_area(iter, move.player_angle + M_PI / 2, pos), move.color);
 			}
 			else
-				client->board.map[(int)iter.y][(int)iter.x].color = move.color;
+				ft_update_tile(&(client->board.map[(int)iter.y][(int)iter.x]),
+					1, move.color);
 		}
 		first = 0;
 		distance = ft_fmin(distance + 0.25, move.radius * 2);
@@ -87,7 +98,6 @@ void	ft_process_move_rotate(t_client *client, t_move move)
 	}
 	iter = ft_vec2_dest(center, counter_angle + (rmove.angle * rmove.dir), move.radius + rmove.mobility);
 	ft_update_board(client, iter, move);
-
 	//	client->board.map[(int)rmove.center.y][(int)rmove.center.x].player_index = move.player_index;
 }
 
@@ -114,5 +124,5 @@ void	ft_process_move(t_client *client, t_move move)
 		ft_process_move_rotate(client, move);
 	else
 		ft_process_move_forward(client, move);
-//	ft_init_parse_client_board(&(client->board));
+	ft_init_parse_client_board(&(client->board));
 }

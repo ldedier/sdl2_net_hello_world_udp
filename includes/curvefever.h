@@ -202,5 +202,6 @@ void					ft_print_ivec2(t_ivec2 vec2);
 t_vec2					ft_vec2_dest(t_vec2 pos, double angle, double speed);
 t_ivec2                 ft_vec2_to_ivec2(t_vec2 iter);
 t_vec2 					ft_new_vec2(double x, double y);
-int						ft_aa_color(t_vec2 iter, double angle, t_vec2 pos, int color);
+double					ft_aa_area(t_vec2 iter, double angle, t_vec2 pos);
+int						ft_color_shade(int color, double shade);
 #endif

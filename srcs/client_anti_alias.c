@@ -147,7 +147,7 @@ double	ft_get_area(t_aa *aa, t_vec2 center)
 	}
 }
 
-int		ft_aa_color(t_vec2 pos, double dir, t_vec2 center, int color)
+double		ft_aa_area(t_vec2 pos, double dir, t_vec2 center)
 {
 	double line_dir = dir + M_PI / 2;
 	t_aa aa;
@@ -178,10 +178,7 @@ int		ft_aa_color(t_vec2 pos, double dir, t_vec2 center, int color)
 					&intersection)))
 	aa.intersections[aa.nb_intersections++] = intersection;
 	if ((aa.up && aa.down) || (aa.left && aa.right))
-	{
-		area = ft_get_area(&aa, center);
-		return ft_color_shade(color, area);
-	}
+		return  ft_get_area(&aa, center);
 	else
 	{
 		t_vec2 third = ft_third_point(aa, ivec);
@@ -190,6 +187,6 @@ int		ft_aa_color(t_vec2 pos, double dir, t_vec2 center, int color)
 		area = 
 			ft_dist(third, aa.intersections[0]) *
 			ft_dist(third, aa.intersections[1]) / 2;
-		return ft_color_shade(color, (inside == 1) ? area : 1- area);
+		return ((inside == 1) ? area : 1 - area);
 	}
 }
