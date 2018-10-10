@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/10/06 00:27:31 by ldedier           #+#    #+#             */
-/*   Updated: 2018/10/06 00:27:31 by ldedier          ###   ########.fr       */
+/*   Updated: 2018/10/10 19:21:36 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ void	ft_process_keys_server(t_server *server, t_client_message *message)
 
 void	ft_process_engine(t_server *server, t_client_message *message)
 {
-	if (!server->game.players[message->player_index].dead)
+	if (!server->game.players[message->player_index].dead && server->nb_clients > 1)
 	{
 		ft_process_dash(server, &(server->game.players[message->player_index]));
 		ft_process_keys_server(server, message);
