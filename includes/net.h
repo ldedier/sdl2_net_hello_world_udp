@@ -6,7 +6,7 @@
 /*   By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/07/30 19:45:00 by ldedier           #+#    #+#             */
-/*   Updated: 2018/09/28 09:44:45 by ldedier          ###   ########.fr       */
+/*   Updated: 2019/07/22 12:00:40 by ldedier          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,6 @@
 # include <stdlib.h>
 # include <fcntl.h>
 # include <math.h>
-# include <SDL.h>
 # include <SDL_ttf.h>
 # include <SDL_net.h>
 # include <SDL_image.h>

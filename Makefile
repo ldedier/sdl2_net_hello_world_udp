@@ -6,7 +6,7 @@
 #    By: ldedier <ldedier@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/07/26 20:58:27 by ldedier           #+#    #+#              #
-#    Updated: 2018/08/27 20:06:50 by ldedier          ###   ########.fr        #
+#    Updated: 2019/07/22 12:06:17 by ldedier          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -33,12 +33,12 @@ LIBMATDIR = libmat
 LIBMAT_INCLUDEDIR = includes
 LIBMAT = $(LIBMATDIR)/libmat.a
 
-LIBSDL2DIR = ~/.brew/lib
-LIBSDL2_INCLUDEDIR = ~/.brew/Cellar/sdl2/2.0.8/include/SDL2/
-LIBSDL2TTF_INCLUDEDIR = ~/.brew/Cellar/sdl2_ttf/2.0.14/include/SDL2/
+LIBSDL2DIR = ~/.brew/lib/
+LIBSDL2_INCLUDEDIR = ~/.brew/Cellar/sdl2/2.0.9_1/include/SDL2/
+LIBSDL2TTF_INCLUDEDIR = ~/.brew/Cellar/sdl2_ttf/2.0.15/include/SDL2/
 LIBSDL2NET_INCLUDEDIR = ~/.brew/Cellar/sdl2_net/2.0.1/include/SDL2/
-LIBSDL2MIXER_INCLUDEDIR = ~/.brew/Cellar/sdl2_mixer/2.0.2_3/include/SDL2/
-LIBSDL2IMAGE_INCLUDEDIR =  ~/.brew/Cellar/sdl2_image/2.0.3/include/SDL2/
+LIBSDL2MIXER_INCLUDEDIR = ~/.brew/Cellar/sdl2_mixer/2.0.4/include/SDL2/
+LIBSDL2IMAGE_INCLUDEDIR =  ~/.brew/Cellar/sdl2_image/2.0.5/include/SDL2/
 
 LIBSDL2DIR_MB = /usr/local/lib
 LIBSDL2_INCLUDEDIR_MB = /usr/local/Cellar/sdl2/2.0.8/include/SDL2/
